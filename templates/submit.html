@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Check-In{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Daily Check-In
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="checkinForm">
+                        <!-- When are you checking in? (Styled as tabs) -->
+                        <div class="mb-4">
+                            <ul class="nav nav-tabs nav-justified" id="checkinTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}active{% endif %}" id="tab-morning" data-bs-toggle="tab" type="button" role="tab" aria-controls="morningFields" aria-selected="{% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}true{% else %}false{% endif %}">
+                                        <i class="fas fa-sun me-2"></i>Morning
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}active{% endif %}" id="tab-evening" data-bs-toggle="tab" type="button" role="tab" aria-controls="eveningFields" aria-selected="{% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}true{% else %}false{% endif %}">
+                                        <i class="fas fa-moon me-2"></i>Evening
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Morning Check-in Fields -->
+                        <div id="morningFields" class="checkin-section mt-4" style="display: {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}block{% else %}none{% endif %};">
+                            <h4 class="mb-3 text-primary border-bottom pb-2"><i class="fas fa-sun me-2"></i>Morning Check-in</h4>
+                            
+                            <!-- Sleep Hours -->
+                            <div class="mb-3">
+                                <label for="sleep_hours" class="form-label">How many hours did you sleep?</label>
+                                <input type="number" class="form-control" id="sleep_hours" name="sleep_hours" 
+                                       min="0" max="24" step="0.5" 
+                                       value="{{ morning_checkin.sleep_hours if morning_checkin else '' }}">
+                                <div class="form-text">Enter the number of hours you slept last night</div>
+                            </div>
+
+                            <!-- Sleep Quality -->
+                            <div class="mb-3">
+                                <label class="form-label">How was your sleep quality?</label>
+                                <div class="d-flex justify-content-between">
+                                    {% for i in range(1, 6) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sleep_quality" 
+                                               id="sleep_quality_{{ i }}" value="{{ i }}"
+                                               {% if morning_checkin and morning_checkin.sleep_quality == i %}checked{% endif %}>
+                                        <label class="form-check-label" for="sleep_quality_{{ i }}">
+                                            {{ i }}<br><small class="text-muted">
+                                            {% if i == 1 %}Poor{% elif i == 2 %}Fair{% elif i == 3 %}Good{% elif i == 4 %}Very Good{% else %}Excellent{% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Energy Level -->
+                            <div class="mb-3">
+                                <label class="form-label">How's your energy level this morning?</label>
+                                <div class="d-flex justify-content-between">
+                                    {% for i in range(1, 6) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="energy_level" 
+                                               id="energy_level_{{ i }}" value="{{ i }}"
+                                               {% if morning_checkin and morning_checkin.energy_level == i %}checked{% endif %}>
+                                        <label class="form-check-label" for="energy_level_{{ i }}">
+                                            {{ i }}<br><small class="text-muted">
+                                            {% if i == 1 %}Very Low{% elif i == 2 %}Low{% elif i == 3 %}Okay{% elif i == 4 %}High{% else %}Very High{% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Morning Goal -->
+                            <div class="mb-3">
+                                <label for="morning_goal" class="form-label">What's one goal for today?</label>
+                                <textarea class="form-control" id="morning_goal" name="morning_goal" rows="2"
+                                          placeholder="e.g., Complete the project presentation, Go for a 30-minute walk...">{{ morning_checkin.morning_goal if morning_checkin else '' }}</textarea>
+                            </div>
+
+                            <!-- Anxiety Level -->
+                            <div class="mb-3">
+                                <label for="anxiety_level" class="form-label">Are you feeling anxious about anything?</label>
+                                <textarea class="form-control" id="anxiety_level" name="anxiety_level" rows="2"
+                                          placeholder="Optional: Share what's on your mind...">{{ morning_checkin.anxiety_level if morning_checkin else '' }}</textarea>
+                            </div>
+
+                            <!-- Morning Tasks -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Today's Tasks</label>
+                                <div id="tasks-list">
+                                    {% if morning_tasks %}
+                                        {% for task in morning_tasks %}
+                                        <div class="task-item row g-2 align-items-center mb-2">
+                                            <div class="col-5">
+                                                <input type="text" class="form-control" name="task_name" value="{{ task.task_name }}" placeholder="Task title" {% if task.is_carried_over %}readonly{% endif %}>
+                                            </div>
+                                            <div class="col-5">
+                                                <input type="text" class="form-control" name="task_notes" value="{{ task.task_notes }}" placeholder="Notes (optional)" {% if task.is_carried_over %}readonly{% endif %}>
+                                            </div>
+                                            <div class="col-3">
+                                                <select class="form-select" name="task_category">
+                                                    {% set categories = ['Work', 'Health', 'Personal', 'Study', 'Chores', 'Other'] %}
+                                                    {% for cat in categories %}
+                                                    <option value="{{ cat }}" {% if task.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-2">
+                                                <select class="form-select" name="task_priority">
+                                                    <option value="Low" {% if task.priority == 'Low' %}selected{% endif %}>Low</option>
+                                                    <option value="Medium" {% if task.priority == 'Medium' or not task.priority %}selected{% endif %}>Medium</option>
+                                                    <option value="High" {% if task.priority == 'High' %}selected{% endif %}>High</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-2">
+                                                {% if task.is_carried_over %}
+                                                    <span class="badge bg-warning text-dark">Carried Over</span>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="task-item row g-2 align-items-center mb-2">
+                                            <div class="col-5">
+                                                <input type="text" class="form-control" name="task_name" placeholder="Task title">
+                                            </div>
+                                            <div class="col-5">
+                                                <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
+                                            </div>
+                                            <div class="col-3">
+                                                <select class="form-select" name="task_category">
+                                                    {% set categories = ['Work', 'Health', 'Personal', 'Study', 'Chores', 'Other'] %}
+                                                    {% for cat in categories %}
+                                                    <option value="{{ cat }}">{{ cat }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-2">
+                                                <select class="form-select" name="task_priority">
+                                                    <option value="Low">Low</option>
+                                                    <option value="Medium">Medium</option>
+                                                    <option value="High">High</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-task-btn-morning">
+                                    <i class="fas fa-plus"></i> Add Another Task
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="ai-suggest-btn-morning">
+                                    <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Evening Check-in Fields -->
+                        <div id="eveningFields" class="checkin-section mt-4" style="display: {% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}block{% else %}none{% endif %};">
+                            <h4 class="mb-3 text-info border-bottom pb-2"><i class="fas fa-moon me-2"></i>Evening Check-in</h4>
+                            <div class="alert alert-info mb-3">
+                                <strong>Tip:</strong> It's best to plan your tasks for tomorrow during your evening check-in!
+                                <button type="button" class="btn btn-outline-primary btn-sm ms-2" id="ai-suggest-btn">
+                                    <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
+                                </button>
+                            </div>
+                            <!-- Evening Tasks Completion -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Today's Tasks</label>
+                                {% if evening_tasks %}
+                                    <ul class="list-group mb-2">
+                                    {% for task in evening_tasks %}
+                                        <li class="list-group-item d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <input type="checkbox" name="task_completed_{{ task.id }}" id="task_completed_{{ task.id }}" value="1" {% if task.is_completed %}checked{% endif %}>
+                                                <label for="task_completed_{{ task.id }}" class="ms-2 mb-0 {% if task.is_completed %}text-success{% endif %}">
+                                                    {{ task.task_name }}
+                                                    {% if task.is_carried_over %}<span class="badge bg-warning text-dark ms-2">Carried Over</span>{% endif %}
+                                                    <span class="badge bg-secondary ms-1">{{ task.priority }}</span>
+                                                </label>
+                                                {% if task.task_notes %}<div class="text-muted small ms-4">{{ task.task_notes }}</div>{% endif %}
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <div class="text-muted">No tasks for today.</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Tomorrow's Tasks Input -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tomorrow's Tasks</label>
+                                <div id="tasks-list-tomorrow">
+                                    <div class="task-item row g-2 align-items-center mb-2">
+                                        <div class="col-5 col-lg-6">
+                                            <input type="text" class="form-control" name="task_name" placeholder="Task title">
+                                        </div>
+                                        <div class="col-5 col-lg-6">
+                                            <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
+                                        </div>
+                                        <div class="col-2 col-lg-2">
+                                            <select class="form-select" name="task_category" style="min-width: 120px;">
+                                                <option value="Work">Work</option>
+                                                <option value="Health">Health</option>
+                                                <option value="Personal">Personal</option>
+                                                <option value="Study">Study</option>
+                                                <option value="Chores">Chores</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-2 col-lg-2">
+                                            <select class="form-select" name="task_priority">
+                                                <option value="Low">Low</option>
+                                                <option value="Medium" selected>Medium</option>
+                                                <option value="High">High</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-1">
+                                            <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-task-btn-tomorrow">
+                                    <i class="fas fa-plus"></i> Add Another Task
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="ai-suggest-btn-evening">
+                                    <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
+                                </button>
+                            </div>
+                            
+                            <!-- Goal Accomplished -->
+                            <div class="mb-3">
+                                <label class="form-label">Did you accomplish your goal today?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="goal_accomplished" 
+                                           id="goal_yes" value="yes"
+                                           {% if evening_checkin and evening_checkin.goal_accomplished %}checked{% endif %}>
+                                    <label class="form-check-label" for="goal_yes">
+                                        <i class="fas fa-check-circle text-success me-2"></i>Yes, I did it!
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="goal_accomplished" 
+                                           id="goal_no" value="no"
+                                           {% if evening_checkin and evening_checkin.goal_accomplished == False %}checked{% endif %}>
+                                    <label class="form-check-label" for="goal_no">
+                                        <i class="fas fa-times-circle text-danger me-2"></i>No, I didn't complete it
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Mood Rating -->
+                            <div class="mb-3">
+                                <label class="form-label">How would you rate your overall mood today?</label>
+                                <div class="d-flex justify-content-between">
+                                    {% for i in range(1, 6) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="mood_rating" 
+                                               id="mood_rating_{{ i }}" value="{{ i }}"
+                                               {% if evening_checkin and evening_checkin.mood_rating == i %}checked{% endif %}>
+                                        <label class="form-check-label" for="mood_rating_{{ i }}">
+                                            {{ i }}<br><small class="text-muted">
+                                            {% if i == 1 %}Terrible{% elif i == 2 %}Bad{% elif i == 3 %}Okay{% elif i == 4 %}Good{% else %}Great{% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Exercise Done -->
+                            <div class="mb-3">
+                                <label class="form-label">Did you exercise today?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exercise_done" 
+                                           id="exercise_yes" value="yes"
+                                           {% if evening_checkin and evening_checkin.exercise_done %}checked{% endif %}>
+                                    <label class="form-check-label" for="exercise_yes">
+                                        <i class="fas fa-dumbbell text-success me-2"></i>Yes, I got some movement in
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exercise_done" 
+                                           id="exercise_no" value="no"
+                                           {% if evening_checkin and evening_checkin.exercise_done == False %}checked{% endif %}>
+                                    <label class="form-check-label" for="exercise_no">
+                                        <i class="fas fa-couch text-warning me-2"></i>No, I didn't exercise today
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- What Drained You -->
+                            <div class="mb-3">
+                                <label for="what_drained_you" class="form-label">What drained you today?</label>
+                                <textarea class="form-control" id="what_drained_you" name="what_drained_you" rows="2"
+                                          placeholder="Optional: What took the most energy from you today?">{{ evening_checkin.what_drained_you if evening_checkin else '' }}</textarea>
+                            </div>
+
+                            <!-- Gratitude -->
+                            <div class="mb-3">
+                                <label for="gratitude" class="form-label">What are you grateful for today?</label>
+                                <textarea class="form-control" id="gratitude" name="gratitude" rows="2"
+                                          placeholder="e.g., A good conversation, beautiful weather, progress on a project...">{{ evening_checkin.gratitude if evening_checkin else '' }}</textarea>
+                            </div>
+
+                            <!-- Day Win -->
+                            <div class="mb-3">
+                                <label class="form-label">Would you call today a win?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="day_win" 
+                                           id="day_win_yes" value="yes"
+                                           {% if evening_checkin and evening_checkin.day_win %}checked{% endif %}>
+                                    <label class="form-check-label" for="day_win_yes">
+                                        <i class="fas fa-trophy text-success me-2"></i>Yes, it was a good day!
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="day_win" 
+                                           id="day_win_no" value="no"
+                                           {% if evening_checkin and evening_checkin.day_win == False %}checked{% endif %}>
+                                    <label class="form-check-label" for="day_win_no">
+                                        <i class="fas fa-thumbs-down text-warning me-2"></i>No, it was challenging
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Overall Day Rating -->
+                            <div class="mb-3">
+                                <label class="form-label">Rate your overall day:</label>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                               id="rating_happy" value="😀"
+                                               {% if evening_checkin and evening_checkin.overall_day_rating == '😀' %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating_happy" style="font-size: 2rem;">😀</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                               id="rating_neutral" value="😐"
+                                               {% if evening_checkin and evening_checkin.overall_day_rating == '😐' %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating_neutral" style="font-size: 2rem;">😐</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                               id="rating_sad" value="😞"
+                                               {% if evening_checkin and evening_checkin.overall_day_rating == '😞' %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating_sad" style="font-size: 2rem;">😞</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Habit Tags (Common for both) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Habit Tags (Optional)</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="reading" id="habit-reading"
+                                               {% if morning_checkin and morning_checkin.habits and 'reading' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-reading">
+                                            📚 Reading
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="gym" id="habit-gym"
+                                               {% if morning_checkin and morning_checkin.habits and 'gym' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-gym">
+                                            💪 Gym/Exercise
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="meditation" id="habit-meditation"
+                                               {% if morning_checkin and morning_checkin.habits and 'meditation' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-meditation">
+                                            🧘 Meditation
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="coding" id="habit-coding"
+                                               {% if morning_checkin and morning_checkin.habits and 'coding' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-coding">
+                                            💻 Coding
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="walking" id="habit-walking"
+                                               {% if morning_checkin and morning_checkin.habits and 'walking' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-walking">
+                                            🚶 Walking
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="cooking" id="habit-cooking"
+                                               {% if morning_checkin and morning_checkin.habits and 'cooking' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-cooking">
+                                            👨‍🍳 Cooking
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="social" id="habit-social"
+                                               {% if morning_checkin and morning_checkin.habits and 'social' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-social">
+                                            👥 Social
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="learning" id="habit-learning"
+                                               {% if morning_checkin and morning_checkin.habits and 'learning' in morning_checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-learning">
+                                            📖 Learning
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                <span id="submitText">Submit Check-In</span>
+                            </button>
+                            <a href="{{ url_for('checkin.dashboard') }}" class="btn btn-outline-secondary text-light border-secondary">
+                                <i class="fas fa-chart-line me-2"></i>View Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Helper to call Gemini API from backend
+async function getGeminiSuggestions(habits, goal, previousTasks) {
+    try {
+        const res = await fetch('/ai/suggest_tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ habits, goal, previous_tasks: previousTasks })
+        });
+        const data = await res.json();
+        if (data.suggested_tasks) {
+            return data.suggested_tasks;
+        } else if (data.error) {
+            alert('AI Suggestion Error: ' + data.error);
+            return [];
+        } else {
+            alert('AI Suggestion Error: Unknown error.');
+            return [];
+        }
+    } catch (err) {
+        alert('AI Suggestion Error: ' + err.message);
+        return [];
+    }
+}
+
+// Helper to append tasks to a container
+function appendTaskList(containerId, tasks) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    (tasks || []).forEach(task => {
+        const taskItem = document.createElement('div');
+        taskItem.className = 'task-item row g-2 align-items-center mb-2';
+        if (containerId === 'tasks-list') {
+            // Morning: col-5, col-5, col-3, col-2, col-2
+            taskItem.innerHTML = `
+                <div class="col-5">
+                    <input type="text" class="form-control" name="task_name" value="${task.task_name || ''}" placeholder="Task title">
+                </div>
+                <div class="col-5">
+                    <input type="text" class="form-control" name="task_notes" value="${task.task_notes || ''}" placeholder="Notes (optional)">
+                </div>
+                <div class="col-3">
+                    <select class="form-select" name="task_category">
+                        <option value="Work" ${task.task_category === 'Work' ? 'selected' : ''}>Work</option>
+                        <option value="Health" ${task.task_category === 'Health' ? 'selected' : ''}>Health</option>
+                        <option value="Personal" ${task.task_category === 'Personal' ? 'selected' : ''}>Personal</option>
+                        <option value="Study" ${task.task_category === 'Study' ? 'selected' : ''}>Study</option>
+                        <option value="Chores" ${task.task_category === 'Chores' ? 'selected' : ''}>Chores</option>
+                        <option value="Other" ${task.task_category === 'Other' ? 'selected' : ''}>Other</option>
+                    </select>
+                </div>
+                <div class="col-2">
+                    <select class="form-select" name="task_priority">
+                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
+                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High</option>
+                    </select>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                </div>
+            `;
+        } else {
+            // Evening (tomorrow): col-5, col-5, col-1, col-1, col-12 col-md-1
+            taskItem.innerHTML = `
+                <div class="col-5">
+                    <input type="text" class="form-control" name="task_name" value="${task.task_name || ''}" placeholder="Task title">
+                </div>
+                <div class="col-5">
+                    <input type="text" class="form-control" name="task_notes" value="${task.task_notes || ''}" placeholder="Notes (optional)">
+                </div>
+                <div class="col-1">
+                    <select class="form-select" name="task_category">
+                        <option value="Work" ${task.task_category === 'Work' ? 'selected' : ''}>Work</option>
+                        <option value="Health" ${task.task_category === 'Health' ? 'selected' : ''}>Health</option>
+                        <option value="Personal" ${task.task_category === 'Personal' ? 'selected' : ''}>Personal</option>
+                        <option value="Study" ${task.task_category === 'Study' ? 'selected' : ''}>Study</option>
+                        <option value="Chores" ${task.task_category === 'Chores' ? 'selected' : ''}>Chores</option>
+                        <option value="Other" ${task.task_category === 'Other' ? 'selected' : ''}>Other</option>
+                    </select>
+                </div>
+                <div class="col-1">
+                    <select class="form-select" name="task_priority">
+                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
+                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-1">
+                    <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                </div>
+            `;
+        }
+        container.appendChild(taskItem);
+    });
+    // Re-attach remove-task event
+    container.querySelectorAll('.remove-task').forEach(btn => {
+        btn.onclick = function() { btn.closest('.task-item').remove(); };
+    });
+}
+
+// Helper to append a blank task input to a container
+function addBlankTask(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const taskItem = document.createElement('div');
+    taskItem.className = 'task-item row g-2 align-items-center mb-2';
+    if (containerId === 'tasks-list') {
+        // Morning: col-5, col-5, col-3, col-2, col-2
+        taskItem.innerHTML = `
+            <div class="col-5">
+                <input type="text" class="form-control" name="task_name" placeholder="Task title">
+            </div>
+            <div class="col-5">
+                <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
+            </div>
+            <div class="col-3">
+                <select class="form-select" name="task_category">
+                    <option value="Work">Work</option>
+                    <option value="Health">Health</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Study">Study</option>
+                    <option value="Chores">Chores</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <select class="form-select" name="task_priority">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+            </div>
+        `;
+    } else {
+        // Evening (tomorrow): col-5, col-5, col-1, col-1, col-12 col-md-1
+        taskItem.innerHTML = `
+            <div class="col-5">
+                <input type="text" class="form-control" name="task_name" placeholder="Task title">
+            </div>
+            <div class="col-5">
+                <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
+            </div>
+            <div class="col-1">
+                <select class="form-select" name="task_category">
+                    <option value="Work">Work</option>
+                    <option value="Health">Health</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Study">Study</option>
+                    <option value="Chores">Chores</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-1">
+                <select class="form-select" name="task_priority">
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-1">
+                <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+            </div>
+        `;
+    }
+    container.appendChild(taskItem);
+    // Re-attach remove-task event
+    container.querySelectorAll('.remove-task').forEach(btn => {
+        btn.onclick = function() { btn.closest('.task-item').remove(); };
+    });
+}
+
+// --- AI Suggestion Button Logic and Add Task Buttons ---
+document.addEventListener('DOMContentLoaded', function() {
+    // Morning
+    const aiBtnMorning = document.getElementById('ai-suggest-btn-morning');
+    const addTaskBtnMorning = document.getElementById('add-task-btn-morning');
+    if (addTaskBtnMorning) {
+        addTaskBtnMorning.addEventListener('click', function() {
+            addBlankTask('tasks-list');
+        });
+    }
+    if (aiBtnMorning) {
+        aiBtnMorning.addEventListener('click', async function() {
+            aiBtnMorning.disabled = true;
+            aiBtnMorning.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Suggesting...';
+            // Gather context
+            const habits = Array.from(document.querySelectorAll('input[name="habits"]:checked')).map(cb => cb.value);
+            const goal = document.getElementById('morning_goal')?.value || '';
+            const taskNames = Array.from(document.querySelectorAll('#tasks-list input[name="task_name"]')).map(i => i.value);
+            const suggestions = await getGeminiSuggestions(habits, goal, taskNames);
+            appendTaskList('tasks-list', suggestions);
+            aiBtnMorning.disabled = false;
+            aiBtnMorning.innerHTML = '<i class="fas fa-magic me-1"></i>Suggest Tasks with AI';
+        });
+    }
+    // Evening
+    const aiBtnEvening = document.getElementById('ai-suggest-btn-evening');
+    const addTaskBtnEvening = document.getElementById('add-task-btn-tomorrow');
+    if (addTaskBtnEvening) {
+        addTaskBtnEvening.addEventListener('click', function() {
+            addBlankTask('tasks-list-tomorrow');
+        });
+    }
+    if (aiBtnEvening) {
+        aiBtnEvening.addEventListener('click', async function() {
+            aiBtnEvening.disabled = true;
+            aiBtnEvening.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Suggesting...';
+            // Gather context
+            const habits = Array.from(document.querySelectorAll('input[name="habits"]:checked')).map(cb => cb.value);
+            const goal = document.getElementById('evening_goal')?.value || '';
+            const taskNames = Array.from(document.querySelectorAll('#tasks-list-tomorrow input[name="task_name"]')).map(i => i.value);
+            const suggestions = await getGeminiSuggestions(habits, goal, taskNames);
+            appendTaskList('tasks-list-tomorrow', suggestions);
+            aiBtnEvening.disabled = false;
+            aiBtnEvening.innerHTML = '<i class="fas fa-magic me-1"></i>Suggest Tasks with AI';
+        });
+    }
+    // Evening
+    const aiBtnTip = document.getElementById('ai-suggest-btn');
+    if (aiBtnTip) {
+        aiBtnTip.addEventListener('click', async function() {
+            if (aiBtnEvening) aiBtnEvening.click();
+        });
+    }
+    // Tab-style toggle for check-in type
+    document.getElementById('tab-morning').addEventListener('click', function() {
+        document.getElementById('morning').checked = true;
+        document.getElementById('morningFields').style.display = 'block';
+        document.getElementById('eveningFields').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('tab-evening').classList.remove('active');
+    });
+    document.getElementById('tab-evening').addEventListener('click', function() {
+        document.getElementById('evening').checked = true;
+        document.getElementById('eveningFields').style.display = 'block';
+        document.getElementById('morningFields').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('tab-morning').classList.remove('active');
+    });
+});
+</script>
+{% endblock %} 

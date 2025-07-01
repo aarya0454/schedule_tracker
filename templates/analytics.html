@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chart-bar me-2"></i>Detailed Analytics</h2>
+            <div>
+                <a href="{{ url_for('checkin.dashboard') }}" class="btn btn-outline-info me-2">
+                    <i class="fas fa-chart-line me-2"></i>Dashboard
+                </a>
+                <a href="{{ url_for('checkin.submit') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Check-In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if checkins %}
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-secondary">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                <h3>{{ insights.total_checkins }}</h3>
+                <p class="mb-0">Total Check-ins</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-success">
+            <div class="card-body text-center">
+                <i class="fas fa-bed fa-2x mb-2"></i>
+                <h3>{{ "%.1f"|format(insights.avg_sleep) }}h</h3>
+                <p class="mb-0">Average Sleep</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-info">
+            <div class="card-body text-center">
+                <i class="fas fa-battery-full fa-2x mb-2"></i>
+                <h3>{{ "%.1f"|format(insights.avg_energy) }}/5</h3>
+                <p class="mb-0">Average Energy</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-bullseye fa-2x mb-2"></i>
+                <h3>{{ "%.1f"|format(insights.avg_focus) }}/5</h3>
+                <p class="mb-0">Average Focus</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sleep Quality Analysis -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-bed me-2"></i>Sleep Quality Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sleepQualityChart" width="400" height="200"></canvas>
+                <div class="mt-3">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-success">
+                                <h5>{{ insights.sleep_quality.excellent }}</h5>
+                                <small>Excellent (7-9h)</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-warning">
+                                <h5>{{ insights.sleep_quality.good }}</h5>
+                                <small>Good (6-7h)</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-danger">
+                                <h5>{{ insights.sleep_quality.poor }}</h5>
+                                <small>Poor (<6h or >9h)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Productivity Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h2 class="text-success">{{ "%.1f"|format(insights.productivity_percentage) }}%</h2>
+                    <p class="text-muted">High Productivity Days</p>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-success" style="width: {{ insights.productivity_percentage }}%"></div>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5 class="text-primary">{{ insights.total_checkins - insights.sleep_quality.poor }}</h5>
+                        <small class="text-muted">Good Sleep Days</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-info">{{ insights.most_common_mood[1] }}</h5>
+                        <small class="text-muted">{{ insights.most_common_mood[0] }} Days</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Patterns -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-week me-2"></i>Weekly Patterns</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="weeklyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Insights -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Key Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-smile me-2"></i>Mood Analysis</h6>
+                    <p><strong>Most Common Mood:</strong> 
+                        <span class="mood-{{ insights.most_common_mood[0].lower() }}">
+                            {% if insights.most_common_mood[0] == 'Happy' %}😊
+                            {% elif insights.most_common_mood[0] == 'Meh' %}😐
+                            {% elif insights.most_common_mood[0] == 'Sad' %}😢
+                            {% elif insights.most_common_mood[0] == 'Angry' %}😠
+                            {% elif insights.most_common_mood[0] == 'Anxious' %}😰
+                            {% endif %}
+                            {{ insights.most_common_mood[0] }}
+                        </span>
+                        ({{ insights.most_common_mood[1] }} out of {{ insights.total_checkins }} days)
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-trending-up me-2"></i>Sleep Insights</h6>
+                    {% if insights.avg_sleep < 7 %}
+                        <div class="alert alert-warning py-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Your average sleep is below the recommended 7-9 hours. Consider improving your sleep schedule.
+                        </div>
+                    {% elif insights.avg_sleep > 9 %}
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Your average sleep is above the recommended range. You might be oversleeping.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success py-2">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Excellent! Your average sleep is within the recommended 7-9 hour range.
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-chart-line me-2"></i>Productivity Insights</h6>
+                    {% if insights.productivity_percentage >= 70 %}
+                        <div class="alert alert-success py-2">
+                            <i class="fas fa-star me-1"></i>
+                            Outstanding! You're highly productive on {{ "%.1f"|format(insights.productivity_percentage) }}% of your days.
+                        </div>
+                    {% elif insights.productivity_percentage >= 50 %}
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-thumbs-up me-1"></i>
+                            Good productivity! You have high energy and focus on {{ "%.1f"|format(insights.productivity_percentage) }}% of your days.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning py-2">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Consider focusing on improving your energy and focus levels for better productivity.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Weekly Recommendations</h5>
+            </div>
+            <div class="card-body">
+                {% set best_day = insights.weekly_data.items()|sort(attribute='1.avg_energy', reverse=true)|first %}
+                {% set worst_day = insights.weekly_data.items()|sort(attribute='1.avg_energy')|first %}
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-arrow-up me-2"></i>Best Performing Day</h6>
+                    <p><strong>{{ best_day[0] }}</strong> - Average Energy: {{ "%.1f"|format(best_day[1].avg_energy) }}/5</p>
+                    <small class="text-muted">Schedule important tasks on this day for maximum productivity.</small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-arrow-down me-2"></i>Challenging Day</h6>
+                    <p><strong>{{ worst_day[0] }}</strong> - Average Energy: {{ "%.1f"|format(worst_day[1].avg_energy) }}/5</p>
+                    <small class="text-muted">Consider lighter tasks or self-care activities on this day.</small>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="fas fa-bed me-2"></i>Sleep Recommendations</h6>
+                    {% set best_sleep_day = insights.weekly_data.items()|sort(attribute='1.avg_sleep', reverse=true)|first %}
+                    {% set worst_sleep_day = insights.weekly_data.items()|sort(attribute='1.avg_sleep')|first %}
+                    <p><strong>Best Sleep:</strong> {{ best_sleep_day[0] }} ({{ "%.1f"|format(best_sleep_day[1].avg_sleep) }}h)</p>
+                    <p><strong>Poor Sleep:</strong> {{ worst_sleep_day[0] }} ({{ "%.1f"|format(worst_sleep_day[1].avg_sleep) }}h)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Analytics Summary Card -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-info text-white shadow mb-3">
+      <div class="card-body text-center">
+        <i class="fas fa-robot fa-2x mb-2"></i>
+        <div id="ai-analytics-summary">Loading AI analytics summary...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly/Monthly AI Report -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-3">
+      <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Weekly/Monthly AI Report</h5>
+      </div>
+      <div class="card-body text-center">
+        <div id="ai-weekly-report">Loading report...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ask AI box -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-3">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Ask AI About Your Data</h5>
+      </div>
+      <div class="card-body">
+        <form id="ai-analytics-query-form" class="d-flex flex-column flex-md-row align-items-center">
+          <input type="text" id="ai-analytics-query" class="form-control me-2 mb-2 mb-md-0" placeholder="Ask anything about your mood, sleep, tasks, etc...">
+          <button type="submit" class="btn btn-primary">Ask AI</button>
+        </form>
+        <div id="ai-analytics-query-result" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Motivational Quote (AI) -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-gradient-primary text-white shadow mb-3">
+      <div class="card-body text-center">
+        <i class="fas fa-quote-left fa-2x mb-3 opacity-50"></i>
+        <blockquote class="mb-2">
+          <p class="lead mb-2" id="ai-motivation">Loading motivational quote...</p>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Best Reminder Time (AI) -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-3">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Best Reminder Time (AI)</h5>
+      </div>
+      <div class="card-body text-center">
+        <div id="ai-reminder-time">Loading reminder time...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+    <h5 class="text-muted">No data available for analytics</h5>
+    <p class="text-muted">Submit some check-ins to see detailed analytics and insights!</p>
+    <a href="{{ url_for('checkin.submit') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Submit First Check-In
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if checkins %}
+<script>
+// Sleep Quality Chart
+const sleepQualityCtx = document.getElementById('sleepQualityChart').getContext('2d');
+const sleepQualityChart = new Chart(sleepQualityCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Excellent (7-9h)', 'Good (6-7h)', 'Poor (<6h or >9h)'],
+        datasets: [{
+            data: [
+                {{ insights.sleep_quality.excellent }},
+                {{ insights.sleep_quality.good }},
+                {{ insights.sleep_quality.poor }}
+            ],
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// Weekly Patterns Chart
+const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+const weeklyChart = new Chart(weeklyCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for day, data in insights.weekly_data.items() %}'{{ day }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Average Energy',
+            data: [{% for day, data in insights.weekly_data.items() %}{{ "%.1f"|format(data.avg_energy) }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(40, 167, 69, 0.8)',
+            borderColor: '#28a745',
+            borderWidth: 1
+        }, {
+            label: 'Average Focus',
+            data: [{% for day, data in insights.weekly_data.items() %}{{ "%.1f"|format(data.avg_focus) }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(0, 123, 255, 0.8)',
+            borderColor: '#007bff',
+            borderWidth: 1
+        }, {
+            label: 'Average Sleep',
+            data: [{% for day, data in insights.weekly_data.items() %}{{ "%.1f"|format(data.avg_sleep) }}{% if not loop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(255, 193, 7, 0.8)',
+            borderColor: '#ffc107',
+            borderWidth: 1,
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 5,
+                ticks: {
+                    stepSize: 1
+                }
+            },
+            y1: {
+                beginAtZero: true,
+                max: 12,
+                position: 'right',
+                grid: {
+                    drawOnChartArea: false,
+                },
+                ticks: {
+                    stepSize: 2
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        }
+    }
+});
+
+function fetchAndDisplayAI(endpoint, elementId, key) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+  fetch(endpoint)
+    .then(r => r.json())
+    .then(data => {
+      el.textContent = data[key] || 'No data.';
+    })
+    .catch(() => {
+      el.textContent = 'AI unavailable.';
+    });
+}
+window.addEventListener('DOMContentLoaded', function() {
+  fetchAndDisplayAI('/ai/analytics_summary', 'ai-analytics-summary', 'summary');
+  fetchAndDisplayAI('/ai/weekly_report', 'ai-weekly-report', 'report');
+  fetchAndDisplayAI('/ai/motivation', 'ai-motivation', 'quote');
+  fetchAndDisplayAI('/ai/reminder_time', 'ai-reminder-time', 'reminder_time');
+});
+const aiQueryForm = document.getElementById('ai-analytics-query-form');
+if (aiQueryForm) {
+  aiQueryForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const input = document.getElementById('ai-analytics-query');
+    const result = document.getElementById('ai-analytics-query-result');
+    if (!input.value.trim()) return;
+    result.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Asking AI...';
+    fetch('/ai/analytics_query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: input.value })
+    })
+      .then(r => r.json())
+      .then(data => {
+        result.textContent = data.answer || 'No answer.';
+      })
+      .catch(() => {
+        result.textContent = 'AI unavailable.';
+      });
+  });
+}
+</script>
+{% endif %}
+{% endblock %} 

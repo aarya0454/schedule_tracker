@@ -1,0 +1,863 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chart-line me-2"></i>Your Daily Check-In Dashboard</h2>
+            <div>
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('export_data', format='csv') }}">
+                            <i class="fas fa-file-csv me-1"></i>CSV
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('export_data', format='json') }}">
+                            <i class="fas fa-file-code me-1"></i>JSON
+                        </a></li>
+                    </ul>
+                </div>
+                <a href="{{ url_for('analytics') }}" class="btn btn-outline-info me-2">
+                    <i class="fas fa-chart-bar me-2"></i>Detailed Analytics
+                </a>
+                <a href="{{ url_for('checkin.submit') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Check-In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Motivational Quote -->
+{% if motivational_quote %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-quote-left fa-2x mb-3 opacity-50"></i>
+                <blockquote class="mb-2">
+                    <p class="lead mb-2">"{{ motivational_quote.text }}"</p>
+                    <footer class="blockquote-footer text-white-50">— {{ motivational_quote.author }}</footer>
+                </blockquote>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Today's Status -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 {% if morning_checkin %}border-success{% else %}border-warning{% endif %}">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-sun me-2 text-warning"></i>Morning Check-in
+                    {% if morning_checkin %}
+                        <span class="badge bg-success float-end">Completed</span>
+                    {% else %}
+                        <span class="badge bg-warning float-end">Pending</span>
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if morning_checkin %}
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h4 mb-1">{{ morning_checkin.sleep_hours }}h</div>
+                            <small class="text-muted">Sleep</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-1">{{ morning_checkin.energy_level }}/5</div>
+                            <small class="text-muted">Energy</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-1">{{ morning_checkin.sleep_quality }}/5</div>
+                            <small class="text-muted">Quality</small>
+                        </div>
+                    </div>
+                    {% if morning_checkin.morning_goal %}
+                        <div class="mt-3">
+                            <small class="text-muted">Today's Goal:</small><br>
+                            <strong>{{ morning_checkin.morning_goal }}</strong>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted text-center mb-0">No morning check-in yet</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                {% if morning_checkin %}
+                    <a href="{{ url_for('edit_checkin', date_str=morning_checkin.date.strftime('%Y-%m-%d'), time_of_day='morning') }}" 
+                       class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('checkin.submit') }}?time=morning" class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-plus me-1"></i>Submit Morning Check-in
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card h-100 {% if evening_checkin %}border-success{% else %}border-warning{% endif %}">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-moon me-2 text-info"></i>Evening Check-in
+                    {% if evening_checkin %}
+                        <span class="badge bg-success float-end">Completed</span>
+                    {% else %}
+                        <span class="badge bg-warning float-end">Pending</span>
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if evening_checkin %}
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h4 mb-1">{{ evening_checkin.mood_rating }}/5</div>
+                            <small class="text-muted">Mood</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-1">
+                                {% if evening_checkin.day_win %}😀{% else %}😞{% endif %}
+                            </div>
+                            <small class="text-muted">Day Win</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-1">
+                                {% if evening_checkin.exercise_done %}✅{% else %}❌{% endif %}
+                            </div>
+                            <small class="text-muted">Exercise</small>
+                        </div>
+                    </div>
+                    {% if evening_checkin.gratitude %}
+                        <div class="mt-3">
+                            <small class="text-muted">Grateful for:</small><br>
+                            <strong>{{ evening_checkin.gratitude[:50] }}{% if evening_checkin.gratitude|length > 50 %}...{% endif %}</strong>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted text-center mb-0">No evening check-in yet</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                {% if evening_checkin %}
+                    <a href="{{ url_for('edit_checkin', date_str=evening_checkin.date.strftime('%Y-%m-%d'), time_of_day='evening') }}" 
+                       class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('checkin.submit') }}?time=evening" class="btn btn-sm btn-primary w-100">
+                        <i class="fas fa-plus me-1"></i>Submit Evening Check-in
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Personalized Tip Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-info text-white shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-robot fa-2x mb-2"></i>
+                <div id="ai-personalized-tip" class="lead">Loading personalized tip...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Summary Cards -->
+{% if checkins %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-secondary">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                <h4>{{ checkins|length }}</h4>
+                <p class="mb-0">Total Check-ins</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-success">
+            <div class="card-body text-center">
+                <i class="fas fa-bed fa-2x mb-2"></i>
+                <h4>{{ "%.1f"|format(chart_data.avg_sleep or 0) }}h</h4>
+                <p class="mb-0">Avg Sleep</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-info">
+            <div class="card-body text-center">
+                <i class="fas fa-battery-full fa-2x mb-2"></i>
+                <h4>{{ "%.1f"|format(chart_data.avg_energy or 0) }}/5</h4>
+                <p class="mb-0">Avg Energy</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-dark text-light border-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-trophy fa-2x mb-2"></i>
+                <h4>{{ "%.0f"|format(chart_data.goal_accomplishment_rate or 0) }}%</h4>
+                <p class="mb-0">Goal Success</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Task Insights & Feedback -->
+{% if checkins %}
+<div class="row mb-4">
+    <div class="col-md-2 mb-3">
+        <div class="card bg-light border-primary text-center">
+            <div class="card-body">
+                <div class="h4">{{ total_tasks or 0 }}</div>
+                <div class="small text-muted">Tasks Today</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card bg-light border-success text-center">
+            <div class="card-body">
+                <div class="h4">{{ completed_tasks or 0 }}</div>
+                <div class="small text-muted">Completed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card bg-light border-warning text-center">
+            <div class="card-body">
+                <div class="h4">{{ pending_tasks or 0 }}</div>
+                <div class="small text-muted">Pending</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card bg-light border-info text-center">
+            <div class="card-body">
+                <div class="h4">{{ carried_over_tasks or 0 }}</div>
+                <div class="small text-muted">Carried Over</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card bg-light border-danger text-center">
+            <div class="card-body">
+                <div class="h4">{{ yesterdays_pending or 0 }}</div>
+                <div class="small text-muted">Yesterday's Pending</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 mb-3">
+        <div class="card bg-light border-dark text-center">
+            <div class="card-body">
+                <div class="h4">{{ max_streak or 0 }}</div>
+                <div class="small text-muted">Best Streak</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Row -->
+{% if chart_data_tasks %}
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task Completion (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="taskBarChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Today's Task Completion</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="taskDoughnutChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Advanced Task Analytics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-light border-primary text-center">
+            <div class="card-body">
+                <div class="h4">{{ '%.1f'|format(rolling_7 or 0) }}%</div>
+                <div class="small text-muted">7-Day Completion</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-light border-info text-center">
+            <div class="card-body">
+                <div class="h4">{{ '%.1f'|format(rolling_14 or 0) }}%</div>
+                <div class="small text-muted">14-Day Completion</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-light border-success text-center">
+            <div class="card-body">
+                <div class="h4">{{ '%.1f'|format(rolling_30 or 0) }}%</div>
+                <div class="small text-muted">30-Day Completion</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-light border-dark text-center">
+            <div class="card-body">
+                <div class="h4">{{ current_streak or 0 }}</div>
+                <div class="small text-muted">Current Streak</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- More Charts -->
+{% if moving_avg and heatmap %}
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>7-Day Moving Average</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="movingAvgChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-fire me-2"></i>30-Day Calendar Heatmap</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-center align-items-center">
+                    {% for status in heatmap %}
+                        <div class="heatmap-cell mx-1 my-1"
+                             style="width:18px;height:18px;border-radius:3px;display:inline-block;background:{{ '#28a745' if status == 'all' else '#ffc107' if status == 'some' else '#dc3545' if status == 'none_done' else '#e9ecef' }};"
+                             title="{% if status == 'all' %}All Done{% elif status == 'some' %}Some Done{% elif status == 'none_done' %}None Done{% else %}No Tasks{% endif %}">
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        <span class="heatmap-cell" style="background:#28a745;width:18px;height:18px;display:inline-block;"></span> All Done
+                        <span class="heatmap-cell" style="background:#ffc107;width:18px;height:18px;display:inline-block;"></span> Some Done
+                        <span class="heatmap-cell" style="background:#dc3545;width:18px;height:18px;display:inline-block;"></span> None Done
+                        <span class="heatmap-cell" style="background:#e9ecef;width:18px;height:18px;display:inline-block;"></span> No Tasks
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Insights Sections -->
+{% if carry_over_rate and top_carried and category_counts %}
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-redo me-2"></i>Carry-Over Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2"><strong>Carry-Over Rate:</strong> {{ '%.1f'|format(carry_over_rate) }}%</div>
+                <div><strong>Top Carried-Over Tasks:</strong></div>
+                <ul class="list-group">
+                    {% for name, count in top_carried %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ name }}
+                        <span class="badge bg-warning text-dark">{{ count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Category Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryPieChart" width="400" height="200"></canvas>
+                <ul class="list-group mt-3">
+                    {% for cat, count in category_counts.items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ cat }}
+                        <span class="badge bg-primary">{{ count }}</span>
+                        {% if category_completion and category_completion.get(cat) %}
+                        <span class="badge bg-success ms-2">{{ '%.1f'|format(category_completion[cat]) }}% done</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Personal Bests -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Personal Bests & Milestones</h5>
+            </div>
+            <div class="card-body">
+                <div><strong>Most Productive Day:</strong> {% if best_day %}{{ best_day.strftime('%b %d, %Y') }} ({{ best_count }} tasks){% else %}N/A{% endif %}</div>
+                <div><strong>First 100% Day:</strong> {% if first_full %}{{ first_full.strftime('%b %d, %Y') }}{% else %}N/A{% endif %}</div>
+                <div><strong>Longest Streak:</strong> {{ max_streak or 0 }} days</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Morning Insights -->
+{% if morning_insights %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-sun me-2"></i>Morning Insights & Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for insight in morning_insights %}
+                    <div class="col-md-6 mb-3">
+                        <div class="alert alert-{{ insight.type }} d-flex align-items-center">
+                            <i class="fas fa-{{ insight.icon }} me-2"></i>
+                            <div>
+                                <strong>{{ insight.title }}</strong><br>
+                                <small>{{ insight.message }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Evening Insights -->
+{% if evening_insights %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-moon me-2"></i>Evening Insights & Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for insight in evening_insights %}
+                    <div class="col-md-6 mb-3">
+                        <div class="alert alert-{{ insight.type }} d-flex align-items-center">
+                            <i class="fas fa-{{ insight.icon }} me-2"></i>
+                            <div>
+                                <strong>{{ insight.title }}</strong><br>
+                                <small>{{ insight.message }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Enhanced Charts Section -->
+{% if chart_data %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sleep vs Energy Trends</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sleepEnergyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Day Win Rate</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="winRateChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Mood Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="moodChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-dumbbell me-2"></i>Exercise Frequency</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="exerciseChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Habit Analysis -->
+{% if habit_data %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-tags me-2"></i>Top Habits</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for habit, count in habit_data[:8] %}
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <div class="h4 mb-1">
+                                {% if habit == 'reading' %}📚
+                                {% elif habit == 'gym' %}💪
+                                {% elif habit == 'meditation' %}🧘
+                                {% elif habit == 'coding' %}💻
+                                {% elif habit == 'walking' %}🚶
+                                {% elif habit == 'cooking' %}👨‍🍳
+                                {% elif habit == 'social' %}👥
+                                {% elif habit == 'learning' %}📖
+                                {% else %}{{ habit }}{% endif %}
+                            </div>
+                            <div class="small text-muted">{{ habit|title }}</div>
+                            <div class="badge bg-success">{{ count }} times</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Calendar Heatmap -->
+{% if heatmap_dates %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Day Win Heatmap</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark">
+                        <thead>
+                            <tr>
+                                <th>Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week_dates in heatmap_dates %}
+                            <tr>
+                                {% for checkin_date in week_dates %}
+                                {% set evening_checkin_item = evening_checkins|selectattr('date', 'equalto', checkin_date)|first %}
+                                <td class="text-center">
+                                    {% if evening_checkin_item %}
+                                        <div class="energy-heatmap {% if evening_checkin_item.day_win %}energy-5{% else %}energy-1{% endif %}" 
+                                             title="{{ evening_checkin_item.date.strftime('%Y-%m-%d') }}: {% if evening_checkin_item.day_win %}Win{% else %}Loss{% endif %}">
+                                            {{ evening_checkin_item.date.day }}
+                                        </div>
+                                    {% else %}
+                                        <div class="energy-heatmap energy-0" title="No data">
+                                            {{ checkin_date.day }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                {% endfor %} {# closes for checkin_date in week_dates #}
+                            </tr>
+                            {% endfor %} {# closes for week_dates in heatmap_dates #}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        <span class="energy-heatmap energy-0 me-2">No Data</span>
+                        <span class="energy-heatmap energy-1 me-2">Loss</span>
+                        <span class="energy-heatmap energy-5 me-2">Win</span>
+                        Day Outcomes
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- AI Tips -->
+{% if ai_tips %}
+<div class="row mb-4">
+    <div class="col-12">
+        {% for tip in ai_tips %}
+        <div class="alert alert-info d-flex align-items-center mb-2">
+            <i class="fas fa-robot me-2"></i>
+            <div>
+                <strong>AI Tip for {{ tip.type|capitalize }}:</strong> {{ tip.message }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Add in Habit Analysis section -->
+{% if habit_data %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-magic me-2"></i>Smart Habit Suggestions (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-habit-suggestion">Loading habit suggestions...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add in Today's Status section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Smart Goal for Today (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-goal-suggestion">Loading smart goal...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Weekly/Monthly AI Report -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Weekly/Monthly AI Report</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-weekly-report">Loading report...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Mood/Energy Pattern (AI) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mood/Energy Pattern (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-analytics-summary">Loading pattern analysis...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Reflection Prompt in Evening Insights -->
+{% if evening_insights %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-comment-dots me-2"></i>Reflection Prompt (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-reflection-prompt">Loading reflection prompt...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Add Ask AI box -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Ask AI About Your Data</h5>
+            </div>
+            <div class="card-body">
+                <form id="ai-analytics-query-form" class="d-flex flex-column flex-md-row align-items-center">
+                    <input type="text" id="ai-analytics-query" class="form-control me-2 mb-2 mb-md-0" placeholder="Ask anything about your mood, sleep, tasks, etc...">
+                    <button type="submit" class="btn btn-primary">Ask AI</button>
+                </form>
+                <div id="ai-analytics-query-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Motivational Quote (AI) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white shadow mb-3">
+            <div class="card-body text-center">
+                <i class="fas fa-quote-left fa-2x mb-3 opacity-50"></i>
+                <blockquote class="mb-2">
+                    <p class="lead mb-2" id="ai-motivation">Loading motivational quote...</p>
+                </blockquote>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Prioritization Advice -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task Prioritization Advice (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-task-advice">Loading advice...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Best Reminder Time (AI) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Best Reminder Time (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="ai-reminder-time">Loading reminder time...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Helper to fetch and display AI results
+function fetchAndDisplayAI(endpoint, elementId, key) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+    fetch(endpoint)
+        .then(r => r.json())
+        .then(data => {
+            el.textContent = data[key] || 'No data.';
+        })
+        .catch(() => {
+            el.textContent = 'AI unavailable.';
+        });
+}
+// Fetch all AI cards on page load
+window.addEventListener('DOMContentLoaded', function() {
+    fetchAndDisplayAI('/ai/personalized_tip', 'ai-personalized-tip', 'tip');
+    fetchAndDisplayAI('/ai/habit_suggestion', 'ai-habit-suggestion', 'habits');
+    fetchAndDisplayAI('/ai/goal_suggestion', 'ai-goal-suggestion', 'goal');
+    fetchAndDisplayAI('/ai/weekly_report', 'ai-weekly-report', 'report');
+    fetchAndDisplayAI('/ai/analytics_summary', 'ai-analytics-summary', 'summary');
+    fetchAndDisplayAI('/ai/motivation', 'ai-motivation', 'quote');
+    fetchAndDisplayAI('/ai/task_advice', 'ai-task-advice', 'advice');
+    fetchAndDisplayAI('/ai/reminder_time', 'ai-reminder-time', 'reminder_time');
+    fetchAndDisplayAI('/ai/reflection_prompt', 'ai-reflection-prompt', 'prompt');
+});
+// Ask AI analytics query
+const aiQueryForm = document.getElementById('ai-analytics-query-form');
+if (aiQueryForm) {
+    aiQueryForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const input = document.getElementById('ai-analytics-query');
+        const result = document.getElementById('ai-analytics-query-result');
+        if (!input.value.trim()) return;
+        result.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Asking AI...';
+        fetch('/ai/analytics_query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: input.value })
+        })
+            .then(r => r.json())
+            .then(data => {
+                result.textContent = data.answer || 'No answer.';
+            })
+            .catch(() => {
+                result.textContent = 'AI unavailable.';
+            });
+    });
+}
+</script>
+<style>
+.energy-heatmap {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.energy-0 { background-color: #6c757d; color: white; }
+.energy-1 { background-color: #dc3545; color: white; }
+.energy-2 { background-color: #fd7e14; color: white; }
+.energy-3 { background-color: #ffc107; color: black; }
+.energy-4 { background-color: #28a745; color: white; }
+.energy-5 { background-color: #20c997; color: white; }
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+</style>
+{% endblock %}

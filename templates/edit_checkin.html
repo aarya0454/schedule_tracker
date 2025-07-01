@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Check-In{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Edit {{ checkin.time_of_day.title() }} Check-In - {{ date_str }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="checkinForm">
+                        <!-- Time of Day (Read-only) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Check-in Type</label>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-{{ 'sun' if checkin.is_morning else 'moon' }} me-2"></i>
+                                    {{ checkin.time_of_day.title() }} Check-in
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Morning Check-in Fields -->
+                        {% if checkin.is_morning %}
+                        <div id="morningFields" class="checkin-section">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-sun me-2"></i>Morning Check-in
+                            </h5>
+                            
+                            <!-- Sleep Hours -->
+                            <div class="mb-3">
+                                <label for="sleep_hours" class="form-label">How many hours did you sleep?</label>
+                                <input type="number" class="form-control" id="sleep_hours" name="sleep_hours" 
+                                       min="0" max="24" step="0.5" 
+                                       value="{{ checkin.sleep_hours or '' }}"
+                                       required>
+                                <div class="form-text">Enter the number of hours you slept last night</div>
+                            </div>
+
+                            <!-- Sleep Quality -->
+                            <div class="mb-3">
+                                <label class="form-label">How was your sleep quality?</label>
+                                <div class="d-flex justify-content-between">
+                                    {% for i in range(1, 6) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sleep_quality" 
+                                               id="sleep_quality_{{ i }}" value="{{ i }}"
+                                               {% if checkin.sleep_quality == i %}checked{% endif %}>
+                                        <label class="form-check-label" for="sleep_quality_{{ i }}">
+                                            {{ i }}<br><small class="text-muted">
+                                            {% if i == 1 %}Poor{% elif i == 2 %}Fair{% elif i == 3 %}Good{% elif i == 4 %}Very Good{% else %}Excellent{% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Energy Level -->
+                            <div class="mb-3">
+                                <label class="form-label">How's your energy level this morning?</label>
+                                <div class="d-flex justify-content-between">
+                                    {% for i in range(1, 6) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="energy_level" 
+                                               id="energy_level_{{ i }}" value="{{ i }}"
+                                               {% if checkin.energy_level == i %}checked{% endif %}>
+                                        <label class="form-check-label" for="energy_level_{{ i }}">
+                                            {{ i }}<br><small class="text-muted">
+                                            {% if i == 1 %}Very Low{% elif i == 2 %}Low{% elif i == 3 %}Okay{% elif i == 4 %}High{% else %}Very High{% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Morning Goal -->
+                            <div class="mb-3">
+                                <label for="morning_goal" class="form-label">What's one goal for today?</label>
+                                <textarea class="form-control" id="morning_goal" name="morning_goal" rows="2"
+                                          placeholder="e.g., Complete the project presentation, Go for a 30-minute walk...">{{ checkin.morning_goal or '' }}</textarea>
+                            </div>
+
+                            <!-- Anxiety Level -->
+                            <div class="mb-3">
+                                <label for="anxiety_level" class="form-label">Are you feeling anxious about anything?</label>
+                                <textarea class="form-control" id="anxiety_level" name="anxiety_level" rows="2"
+                                          placeholder="Optional: Share what's on your mind...">{{ checkin.anxiety_level or '' }}</textarea>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Evening Check-in Fields -->
+                        {% if checkin.is_evening %}
+                        <div id="eveningFields" class="checkin-section">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-moon me-2"></i>Evening Check-in
+                            </h5>
+                            
+                            <!-- Goal Accomplished -->
+                            <div class="mb-3">
+                                <label class="form-label">Did you accomplish your goal today?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="goal_accomplished" 
+                                           id="goal_yes" value="yes"
+                                           {% if checkin.goal_accomplished %}checked{% endif %}>
+                                    <label class="form-check-label" for="goal_yes">
+                                        <i class="fas fa-check-circle text-success me-2"></i>Yes, I did it!
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="goal_accomplished" 
+                                           id="goal_no" value="no"
+                                           {% if checkin.goal_accomplished == False %}checked{% endif %}>
+                                    <label class="form-check-label" for="goal_no">
+                                        <i class="fas fa-times-circle text-danger me-2"></i>No, I didn't complete it
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Mood Rating -->
+                            <div class="mb-3">
+                                <label class="form-label">How would you rate your overall mood today?</label>
+                                <div class="d-flex justify-content-between">
+                                    {% for i in range(1, 6) %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="mood_rating" 
+                                               id="mood_rating_{{ i }}" value="{{ i }}"
+                                               {% if checkin.mood_rating == i %}checked{% endif %}>
+                                        <label class="form-check-label" for="mood_rating_{{ i }}">
+                                            {{ i }}<br><small class="text-muted">
+                                            {% if i == 1 %}Terrible{% elif i == 2 %}Bad{% elif i == 3 %}Okay{% elif i == 4 %}Good{% else %}Great{% endif %}
+                                            </small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Exercise Done -->
+                            <div class="mb-3">
+                                <label class="form-label">Did you exercise today?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exercise_done" 
+                                           id="exercise_yes" value="yes"
+                                           {% if checkin.exercise_done %}checked{% endif %}>
+                                    <label class="form-check-label" for="exercise_yes">
+                                        <i class="fas fa-dumbbell text-success me-2"></i>Yes, I got some movement in
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="exercise_done" 
+                                           id="exercise_no" value="no"
+                                           {% if checkin.exercise_done == False %}checked{% endif %}>
+                                    <label class="form-check-label" for="exercise_no">
+                                        <i class="fas fa-couch text-warning me-2"></i>No, I didn't exercise today
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- What Drained You -->
+                            <div class="mb-3">
+                                <label for="what_drained_you" class="form-label">What drained you today?</label>
+                                <textarea class="form-control" id="what_drained_you" name="what_drained_you" rows="2"
+                                          placeholder="Optional: What took the most energy from you today?">{{ checkin.what_drained_you or '' }}</textarea>
+                            </div>
+
+                            <!-- Gratitude -->
+                            <div class="mb-3">
+                                <label for="gratitude" class="form-label">What are you grateful for today?</label>
+                                <textarea class="form-control" id="gratitude" name="gratitude" rows="2"
+                                          placeholder="e.g., A good conversation, beautiful weather, progress on a project...">{{ checkin.gratitude or '' }}</textarea>
+                            </div>
+
+                            <!-- Day Win -->
+                            <div class="mb-3">
+                                <label class="form-label">Would you call today a win?</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="day_win" 
+                                           id="day_win_yes" value="yes"
+                                           {% if checkin.day_win %}checked{% endif %}>
+                                    <label class="form-check-label" for="day_win_yes">
+                                        <i class="fas fa-trophy text-success me-2"></i>Yes, it was a good day!
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="day_win" 
+                                           id="day_win_no" value="no"
+                                           {% if checkin.day_win == False %}checked{% endif %}>
+                                    <label class="form-check-label" for="day_win_no">
+                                        <i class="fas fa-thumbs-down text-warning me-2"></i>No, it was challenging
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Overall Day Rating -->
+                            <div class="mb-3">
+                                <label class="form-label">Rate your overall day:</label>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                               id="rating_happy" value="😀"
+                                               {% if checkin.overall_day_rating == '😀' %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating_happy" style="font-size: 2rem;">😀</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                               id="rating_neutral" value="😐"
+                                               {% if checkin.overall_day_rating == '😐' %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating_neutral" style="font-size: 2rem;">😐</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                               id="rating_sad" value="😞"
+                                               {% if checkin.overall_day_rating == '😞' %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating_sad" style="font-size: 2rem;">😞</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Habit Tags -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Habit Tags (Optional)</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="reading" id="habit-reading"
+                                               {% if checkin.habits and 'reading' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-reading">
+                                            📚 Reading
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="gym" id="habit-gym"
+                                               {% if checkin.habits and 'gym' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-gym">
+                                            💪 Gym/Exercise
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="meditation" id="habit-meditation"
+                                               {% if checkin.habits and 'meditation' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-meditation">
+                                            🧘 Meditation
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="coding" id="habit-coding"
+                                               {% if checkin.habits and 'coding' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-coding">
+                                            💻 Coding
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="walking" id="habit-walking"
+                                               {% if checkin.habits and 'walking' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-walking">
+                                            🚶 Walking
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="cooking" id="habit-cooking"
+                                               {% if checkin.habits and 'cooking' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-cooking">
+                                            👨‍🍳 Cooking
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="social" id="habit-social"
+                                               {% if checkin.habits and 'social' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-social">
+                                            👥 Social
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="habits" value="learning" id="habit-learning"
+                                               {% if checkin.habits and 'learning' in checkin.habits|from_json %}checked{% endif %}>
+                                        <label class="form-check-label" for="habit-learning">
+                                            📖 Learning
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Check-In
+                            </button>
+                            <a href="{{ url_for('checkin.dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
