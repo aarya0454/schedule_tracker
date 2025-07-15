@@ -34,7 +34,7 @@ app.secret_key = "lost-is-coding🔥123"
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['GENAI_API_KEY'] = os.environ.get('GENAI_API_KEY')
 # (Recommended: set these in your environment or in instance/config.py, which is gitignored)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///checkin.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
