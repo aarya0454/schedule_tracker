@@ -109,6 +109,10 @@ class CheckIn(db.Model):
     @property
     def is_evening(self):
         return self.time_of_day == 'evening'
+@app.route('/init-db')
+def init_db():
+    db.create_all()
+    return '✅ Database initialized successfully!'
 
 
 class Task(db.Model):
