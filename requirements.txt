@@ -6,3 +6,4 @@ APScheduler==3.10.4
 nltk==3.8.1
 requests==2.31.0 
 gunicorn
+psycopg2
