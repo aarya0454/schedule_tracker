@@ -835,7 +835,6 @@
 {% block scripts %}
 {{ super() }}
 <script>
-// Helper to fetch and display AI results as markdown
 function fetchAndDisplayAI(endpoint, elementId, key) {
     const el = document.getElementById(elementId);
     if (!el) return;
@@ -843,15 +842,17 @@ function fetchAndDisplayAI(endpoint, elementId, key) {
     fetch(endpoint)
         .then(r => r.json())
         .then(data => {
+            console.log('AI response for', endpoint, data); // Debug log
             let value = data[key];
             if (Array.isArray(value)) value = value.join('\n');
-            if (value) {
+            if (typeof value === 'string' && value.trim().length > 0) {
                 el.innerHTML = marked.parse(value);
             } else {
                 el.textContent = 'No data.';
             }
         })
-        .catch(() => {
+        .catch((err) => {
+            console.error('AI fetch error for', endpoint, err);
             el.textContent = 'AI unavailable.';
         });
 }
