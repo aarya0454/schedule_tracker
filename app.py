@@ -435,20 +435,21 @@ def dashboard():
     # Prepare heatmap dates (4 weeks x 7 days)
     heatmap_dates = []
     if checkins:
-        start_date = checkins[0].date
-        for week in range(4):
-            week_dates = []
-            for day in range(7):
-                day_offset = week * 7 + day
-                week_dates.append(start_date - timedelta(days=day_offset))
+        # Find the most recent Saturday (end of week)
+        last_date = checkins[0].date
+        last_saturday = last_date - timedelta(days=(last_date.weekday() + 2) % 7)
+        # Build 4 weeks, each Sunday to Saturday, oldest week first
+        for week in reversed(range(4)):
+            week_start = last_saturday - timedelta(days=6 + week * 7)
+            week_dates = [week_start + timedelta(days=d) for d in range(7)]
             heatmap_dates.append(week_dates)
     else:
-        # fallback: just show last 28 days from today
-        for week in range(4):
-            week_dates = []
-            for day in range(7):
-                day_offset = week * 7 + day
-                week_dates.append(today - timedelta(days=day_offset))
+        # fallback: just show last 28 days from today, grouped by week, Sunday to Saturday
+        last_date = today
+        last_saturday = last_date - timedelta(days=(last_date.weekday() + 2) % 7)
+        for week in reversed(range(4)):
+            week_start = last_saturday - timedelta(days=6 + week * 7)
+            week_dates = [week_start + timedelta(days=d) for d in range(7)]
             heatmap_dates.append(week_dates)
 
     # Prepare energy/focus pairs for charting or display
