@@ -163,6 +163,7 @@
 </div>
 
 <!-- AI Personalized Tip Card -->
+{% if checkins|length >= 2 %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card bg-info text-white shadow">
@@ -173,6 +174,18 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-info text-white shadow">
+            <div class="card-body text-center">
+                <i class="fas fa-robot fa-2x mb-2"></i>
+                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Analytics Summary Cards -->
 {% if checkins %}
@@ -788,6 +801,7 @@
 
 {% block scripts %}
 {{ super() }}
+{% if checkins|length >= 2 %}
 <script>
 // Helper to fetch and display AI results
 function fetchAndDisplayAI(endpoint, elementId, key) {
@@ -839,6 +853,7 @@ if (aiQueryForm) {
     });
 }
 </script>
+{% endif %}
 <style>
 .energy-heatmap {
     display: inline-block;

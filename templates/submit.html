@@ -3,6 +3,115 @@
 {% block title %}Submit Check-In{% endblock %}
 
 {% block content %}
+<style>
+/* Soft, modern, aesthetic palette for check-in form */
+body, .bg-light {
+    background-color: #f4f6fb !important;
+}
+.card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px 0 rgba(60,72,88,0.07);
+    border: none;
+}
+.nav-tabs .nav-link {
+    border-radius: 12px 12px 0 0;
+    color: #6c757d;
+    background: #f4f6fb;
+    border: none;
+    margin-right: 2px;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+.nav-tabs .nav-link.active {
+    background: linear-gradient(90deg, #b8baff 0%, #6c8cff 100%);
+    color: #222;
+    box-shadow: 0 2px 8px 0 rgba(108,140,255,0.10);
+}
+.tab-content {
+    background: #f8f9fa;
+    border-radius: 0 0 18px 18px;
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    margin-bottom: 1rem;
+}
+.card-header {
+    background: #e9eafc;
+    color: #6c8cff;
+    border-radius: 18px 18px 0 0;
+    border: none;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+.btn-primary, .btn-outline-primary {
+    background: #6c8cff;
+    border: none;
+    color: #fff;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.btn-primary:hover, .btn-outline-primary:hover {
+    background: #4e6edb;
+    color: #fff;
+}
+.btn-outline-success {
+    border-color: #6fcf97;
+    color: #6fcf97;
+    background: #f4f6fb;
+}
+.btn-outline-success:hover {
+    background: #6fcf97;
+    color: #fff;
+}
+.form-control, .form-select, textarea {
+    border-radius: 8px;
+    border: 1px solid #e0e3ef;
+    background: #f8f9fa;
+    color: #222;
+}
+.form-control:focus, .form-select:focus, textarea:focus {
+    border-color: #b8baff;
+    background: #fff;
+    color: #222;
+}
+.alert-info {
+    background: #e9f7fa;
+    color: #3a6b7c;
+    border: none;
+}
+.alert-primary {
+    background: #e9eafc;
+    color: #6c8cff;
+    border: none;
+}
+.alert-success {
+    background: #eafaf1;
+    color: #3a7c5a;
+    border: none;
+}
+label.form-label, .fw-bold {
+    color: #4e6edb;
+}
+input[type="radio"]:checked + label.form-check-label {
+    color: #6c8cff;
+    font-weight: 600;
+}
+input[type="checkbox"]:checked + label.form-check-label {
+    color: #6fcf97;
+    font-weight: 600;
+}
+.badge.bg-warning {
+    background: #fff3cd;
+    color: #b8860b;
+}
+.badge.bg-secondary {
+    background: #e9eafc;
+    color: #6c8cff;
+}
+.btn-danger {
+    border-radius: 8px;
+}
+</style>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -19,349 +128,347 @@
                         <div class="mb-4">
                             <ul class="nav nav-tabs nav-justified" id="checkinTab" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}active{% endif %}" id="tab-morning" data-bs-toggle="tab" type="button" role="tab" aria-controls="morningFields" aria-selected="{% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}true{% else %}false{% endif %}">
+                                    <button class="nav-link {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}active{% endif %}" id="tab-morning" data-bs-toggle="tab" data-bs-target="#morningFields" type="button" role="tab" aria-controls="morningFields" aria-selected="{% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}true{% else %}false{% endif %}">
                                         <i class="fas fa-sun me-2"></i>Morning
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}active{% endif %}" id="tab-evening" data-bs-toggle="tab" type="button" role="tab" aria-controls="eveningFields" aria-selected="{% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}true{% else %}false{% endif %}">
+                                    <button class="nav-link {% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}active{% endif %}" id="tab-evening" data-bs-toggle="tab" data-bs-target="#eveningFields" type="button" role="tab" aria-controls="eveningFields" aria-selected="{% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}true{% else %}false{% endif %}">
                                         <i class="fas fa-moon me-2"></i>Evening
                                     </button>
                                 </li>
                             </ul>
                         </div>
-
-                        <!-- Morning Check-in Fields -->
-                        <div id="morningFields" class="checkin-section mt-4" style="display: {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}block{% else %}none{% endif %};">
-                            <h4 class="mb-3 text-primary border-bottom pb-2"><i class="fas fa-sun me-2"></i>Morning Check-in</h4>
-                            
-                            <!-- Sleep Hours -->
-                            <div class="mb-3">
-                                <label for="sleep_hours" class="form-label">How many hours did you sleep?</label>
-                                <input type="number" class="form-control" id="sleep_hours" name="sleep_hours" 
-                                       min="0" max="24" step="0.5" 
-                                       value="{{ morning_checkin.sleep_hours if morning_checkin else '' }}">
-                                <div class="form-text">Enter the number of hours you slept last night</div>
-                            </div>
-
-                            <!-- Sleep Quality -->
-                            <div class="mb-3">
-                                <label class="form-label">How was your sleep quality?</label>
-                                <div class="d-flex justify-content-between">
-                                    {% for i in range(1, 6) %}
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="sleep_quality" 
-                                               id="sleep_quality_{{ i }}" value="{{ i }}"
-                                               {% if morning_checkin and morning_checkin.sleep_quality == i %}checked{% endif %}>
-                                        <label class="form-check-label" for="sleep_quality_{{ i }}">
-                                            {{ i }}<br><small class="text-muted">
-                                            {% if i == 1 %}Poor{% elif i == 2 %}Fair{% elif i == 3 %}Good{% elif i == 4 %}Very Good{% else %}Excellent{% endif %}
-                                            </small>
-                                        </label>
-                                    </div>
-                                    {% endfor %}
+                        <div class="tab-content">
+                            <div class="tab-pane fade {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}show active{% endif %}" id="morningFields" role="tabpanel" aria-labelledby="tab-morning">
+                                <h4 class="mb-3 text-primary border-bottom pb-2"><i class="fas fa-sun me-2"></i>Morning Check-in</h4>
+                                
+                                <!-- Sleep Hours -->
+                                <div class="mb-3">
+                                    <label for="sleep_hours" class="form-label">How many hours did you sleep?</label>
+                                    <input type="number" class="form-control" id="sleep_hours" name="sleep_hours" 
+                                           min="0" max="24" step="0.5" 
+                                           value="{{ morning_checkin.sleep_hours if morning_checkin else '' }}">
+                                    <div class="form-text">Enter the number of hours you slept last night</div>
                                 </div>
-                            </div>
 
-                            <!-- Energy Level -->
-                            <div class="mb-3">
-                                <label class="form-label">How's your energy level this morning?</label>
-                                <div class="d-flex justify-content-between">
-                                    {% for i in range(1, 6) %}
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="energy_level" 
-                                               id="energy_level_{{ i }}" value="{{ i }}"
-                                               {% if morning_checkin and morning_checkin.energy_level == i %}checked{% endif %}>
-                                        <label class="form-check-label" for="energy_level_{{ i }}">
-                                            {{ i }}<br><small class="text-muted">
-                                            {% if i == 1 %}Very Low{% elif i == 2 %}Low{% elif i == 3 %}Okay{% elif i == 4 %}High{% else %}Very High{% endif %}
-                                            </small>
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <!-- Morning Goal -->
-                            <div class="mb-3">
-                                <label for="morning_goal" class="form-label">What's one goal for today?</label>
-                                <textarea class="form-control" id="morning_goal" name="morning_goal" rows="2"
-                                          placeholder="e.g., Complete the project presentation, Go for a 30-minute walk...">{{ morning_checkin.morning_goal if morning_checkin else '' }}</textarea>
-                            </div>
-
-                            <!-- Anxiety Level -->
-                            <div class="mb-3">
-                                <label for="anxiety_level" class="form-label">Are you feeling anxious about anything?</label>
-                                <textarea class="form-control" id="anxiety_level" name="anxiety_level" rows="2"
-                                          placeholder="Optional: Share what's on your mind...">{{ morning_checkin.anxiety_level if morning_checkin else '' }}</textarea>
-                            </div>
-
-                            <!-- Morning Tasks -->
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Today's Tasks</label>
-                                <div id="tasks-list">
-                                    {% if morning_tasks %}
-                                        {% for task in morning_tasks %}
-                                        <div class="task-item row g-2 align-items-center mb-2">
-                                            <div class="col-5">
-                                                <input type="text" class="form-control" name="task_name" value="{{ task.task_name }}" placeholder="Task title" {% if task.is_carried_over %}readonly{% endif %}>
-                                            </div>
-                                            <div class="col-5">
-                                                <input type="text" class="form-control" name="task_notes" value="{{ task.task_notes }}" placeholder="Notes (optional)" {% if task.is_carried_over %}readonly{% endif %}>
-                                            </div>
-                                            <div class="col-3">
-                                                <select class="form-select" name="task_category">
-                                                    {% set categories = ['Work', 'Health', 'Personal', 'Study', 'Chores', 'Other'] %}
-                                                    {% for cat in categories %}
-                                                    <option value="{{ cat }}" {% if task.category == cat %}selected{% endif %}>{{ cat }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <div class="col-2">
-                                                <select class="form-select" name="task_priority">
-                                                    <option value="Low" {% if task.priority == 'Low' %}selected{% endif %}>Low</option>
-                                                    <option value="Medium" {% if task.priority == 'Medium' or not task.priority %}selected{% endif %}>Medium</option>
-                                                    <option value="High" {% if task.priority == 'High' %}selected{% endif %}>High</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-2">
-                                                {% if task.is_carried_over %}
-                                                    <span class="badge bg-warning text-dark">Carried Over</span>
-                                                {% else %}
-                                                    <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
-                                                {% endif %}
-                                            </div>
+                                <!-- Sleep Quality -->
+                                <div class="mb-3">
+                                    <label class="form-label">How was your sleep quality?</label>
+                                    <div class="d-flex justify-content-between">
+                                        {% for i in range(1, 6) %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="sleep_quality" 
+                                                   id="sleep_quality_{{ i }}" value="{{ i }}"
+                                                   {% if morning_checkin and morning_checkin.sleep_quality == i %}checked{% endif %}>
+                                            <label class="form-check-label" for="sleep_quality_{{ i }}">
+                                                {{ i }}<br><small class="text-muted">
+                                                {% if i == 1 %}Poor{% elif i == 2 %}Fair{% elif i == 3 %}Good{% elif i == 4 %}Very Good{% else %}Excellent{% endif %}
+                                                </small>
+                                            </label>
                                         </div>
                                         {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Energy Level -->
+                                <div class="mb-3">
+                                    <label class="form-label">How's your energy level this morning?</label>
+                                    <div class="d-flex justify-content-between">
+                                        {% for i in range(1, 6) %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="energy_level" 
+                                                   id="energy_level_{{ i }}" value="{{ i }}"
+                                                   {% if morning_checkin and morning_checkin.energy_level == i %}checked{% endif %}>
+                                            <label class="form-check-label" for="energy_level_{{ i }}">
+                                                {{ i }}<br><small class="text-muted">
+                                                {% if i == 1 %}Very Low{% elif i == 2 %}Low{% elif i == 3 %}Okay{% elif i == 4 %}High{% else %}Very High{% endif %}
+                                                </small>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Morning Goal -->
+                                <div class="mb-3">
+                                    <label for="morning_goal" class="form-label">What's one goal for today?</label>
+                                    <textarea class="form-control" id="morning_goal" name="morning_goal" rows="2"
+                                              placeholder="e.g., Complete the project presentation, Go for a 30-minute walk...">{{ morning_checkin.morning_goal if morning_checkin else '' }}</textarea>
+                                </div>
+
+                                <!-- Anxiety Level -->
+                                <div class="mb-3">
+                                    <label for="anxiety_level" class="form-label">Are you feeling anxious about anything?</label>
+                                    <textarea class="form-control" id="anxiety_level" name="anxiety_level" rows="2"
+                                              placeholder="Optional: Share what's on your mind...">{{ morning_checkin.anxiety_level if morning_checkin else '' }}</textarea>
+                                </div>
+
+                                <!-- Morning Tasks -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Today's Tasks</label>
+                                    <div id="tasks-list">
+                                        {% if morning_tasks %}
+                                            {% for task in morning_tasks %}
+                                            <div class="task-item row g-2 align-items-center mb-2">
+                                                <div class="col-5">
+                                                    <input type="text" class="form-control" name="task_name" value="{{ task.task_name }}" placeholder="Task title" {% if task.is_carried_over %}readonly{% endif %}>
+                                                </div>
+                                                <div class="col-5">
+                                                    <input type="text" class="form-control" name="task_notes" value="{{ task.task_notes }}" placeholder="Notes (optional)" {% if task.is_carried_over %}readonly{% endif %}>
+                                                </div>
+                                                <div class="col-3">
+                                                    <select class="form-select" name="task_category">
+                                                        {% set categories = ['Work', 'Health', 'Personal', 'Study', 'Chores', 'Other'] %}
+                                                        {% for cat in categories %}
+                                                        <option value="{{ cat }}" {% if task.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-2">
+                                                    <select class="form-select" name="task_priority">
+                                                        <option value="Low" {% if task.priority == 'Low' %}selected{% endif %}>Low</option>
+                                                        <option value="Medium" {% if task.priority == 'Medium' or not task.priority %}selected{% endif %}>Medium</option>
+                                                        <option value="High" {% if task.priority == 'High' %}selected{% endif %}>High</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-2">
+                                                    {% if task.is_carried_over %}
+                                                        <span class="badge bg-warning text-dark">Carried Over</span>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="task-item row g-2 align-items-center mb-2">
+                                                <div class="col-5">
+                                                    <input type="text" class="form-control" name="task_name" placeholder="Task title">
+                                                </div>
+                                                <div class="col-5">
+                                                    <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
+                                                </div>
+                                                <div class="col-3">
+                                                    <select class="form-select" name="task_category">
+                                                        {% set categories = ['Work', 'Health', 'Personal', 'Study', 'Chores', 'Other'] %}
+                                                        {% for cat in categories %}
+                                                        <option value="{{ cat }}">{{ cat }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-2">
+                                                    <select class="form-select" name="task_priority">
+                                                        <option value="Low">Low</option>
+                                                        <option value="Medium">Medium</option>
+                                                        <option value="High">High</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-2">
+                                                    <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-task-btn-morning">
+                                        <i class="fas fa-plus"></i> Add Another Task
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="ai-suggest-btn-morning">
+                                        <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade {% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}show active{% endif %}" id="eveningFields" role="tabpanel" aria-labelledby="tab-evening">
+                                <h4 class="mb-3 text-info border-bottom pb-2"><i class="fas fa-moon me-2"></i>Evening Check-in</h4>
+                                <div class="alert alert-info mb-3">
+                                    <strong>Tip:</strong> It's best to plan your tasks for tomorrow during your evening check-in!
+                                    <button type="button" class="btn btn-outline-primary btn-sm ms-2" id="ai-suggest-btn">
+                                        <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
+                                    </button>
+                                </div>
+                                <!-- Evening Tasks Completion -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Today's Tasks</label>
+                                    {% if evening_tasks %}
+                                        <ul class="list-group mb-2">
+                                        {% for task in evening_tasks %}
+                                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                                <div>
+                                                    <input type="checkbox" name="task_completed_{{ task.id }}" id="task_completed_{{ task.id }}" value="1" {% if task.is_completed %}checked{% endif %}>
+                                                    <label for="task_completed_{{ task.id }}" class="ms-2 mb-0 {% if task.is_completed %}text-success{% endif %}">
+                                                        {{ task.task_name }}
+                                                        {% if task.is_carried_over %}<span class="badge bg-warning text-dark ms-2">Carried Over</span>{% endif %}
+                                                        <span class="badge bg-secondary ms-1">{{ task.priority }}</span>
+                                                    </label>
+                                                    {% if task.task_notes %}<div class="text-muted small ms-4">{{ task.task_notes }}</div>{% endif %}
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                        </ul>
                                     {% else %}
+                                        <div class="text-muted">No tasks for today.</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Tomorrow's Tasks Input -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Tomorrow's Tasks</label>
+                                    <div id="tasks-list-tomorrow">
                                         <div class="task-item row g-2 align-items-center mb-2">
-                                            <div class="col-5">
+                                            <div class="col-5 col-lg-6">
                                                 <input type="text" class="form-control" name="task_name" placeholder="Task title">
                                             </div>
-                                            <div class="col-5">
+                                            <div class="col-5 col-lg-6">
                                                 <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
                                             </div>
-                                            <div class="col-3">
-                                                <select class="form-select" name="task_category">
-                                                    {% set categories = ['Work', 'Health', 'Personal', 'Study', 'Chores', 'Other'] %}
-                                                    {% for cat in categories %}
-                                                    <option value="{{ cat }}">{{ cat }}</option>
-                                                    {% endfor %}
+                                            <div class="col-2 col-lg-2">
+                                                <select class="form-select" name="task_category" style="min-width: 120px;">
+                                                    <option value="Work">Work</option>
+                                                    <option value="Health">Health</option>
+                                                    <option value="Personal">Personal</option>
+                                                    <option value="Study">Study</option>
+                                                    <option value="Chores">Chores</option>
+                                                    <option value="Other">Other</option>
                                                 </select>
                                             </div>
-                                            <div class="col-2">
+                                            <div class="col-2 col-lg-2">
                                                 <select class="form-select" name="task_priority">
                                                     <option value="Low">Low</option>
-                                                    <option value="Medium">Medium</option>
+                                                    <option value="Medium" selected>Medium</option>
                                                     <option value="High">High</option>
                                                 </select>
                                             </div>
-                                            <div class="col-2">
+                                            <div class="col-12 col-md-1">
                                                 <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
                                             </div>
                                         </div>
-                                    {% endif %}
-                                </div>
-                                <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-task-btn-morning">
-                                    <i class="fas fa-plus"></i> Add Another Task
-                                </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="ai-suggest-btn-morning">
-                                    <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Evening Check-in Fields -->
-                        <div id="eveningFields" class="checkin-section mt-4" style="display: {% if suggested_time == 'evening' or request.args.get('time') == 'evening' %}block{% else %}none{% endif %};">
-                            <h4 class="mb-3 text-info border-bottom pb-2"><i class="fas fa-moon me-2"></i>Evening Check-in</h4>
-                            <div class="alert alert-info mb-3">
-                                <strong>Tip:</strong> It's best to plan your tasks for tomorrow during your evening check-in!
-                                <button type="button" class="btn btn-outline-primary btn-sm ms-2" id="ai-suggest-btn">
-                                    <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
-                                </button>
-                            </div>
-                            <!-- Evening Tasks Completion -->
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Today's Tasks</label>
-                                {% if evening_tasks %}
-                                    <ul class="list-group mb-2">
-                                    {% for task in evening_tasks %}
-                                        <li class="list-group-item d-flex align-items-center justify-content-between">
-                                            <div>
-                                                <input type="checkbox" name="task_completed_{{ task.id }}" id="task_completed_{{ task.id }}" value="1" {% if task.is_completed %}checked{% endif %}>
-                                                <label for="task_completed_{{ task.id }}" class="ms-2 mb-0 {% if task.is_completed %}text-success{% endif %}">
-                                                    {{ task.task_name }}
-                                                    {% if task.is_carried_over %}<span class="badge bg-warning text-dark ms-2">Carried Over</span>{% endif %}
-                                                    <span class="badge bg-secondary ms-1">{{ task.priority }}</span>
-                                                </label>
-                                                {% if task.task_notes %}<div class="text-muted small ms-4">{{ task.task_notes }}</div>{% endif %}
-                                            </div>
-                                        </li>
-                                    {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <div class="text-muted">No tasks for today.</div>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Tomorrow's Tasks Input -->
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Tomorrow's Tasks</label>
-                                <div id="tasks-list-tomorrow">
-                                    <div class="task-item row g-2 align-items-center mb-2">
-                                        <div class="col-5 col-lg-6">
-                                            <input type="text" class="form-control" name="task_name" placeholder="Task title">
-                                        </div>
-                                        <div class="col-5 col-lg-6">
-                                            <input type="text" class="form-control" name="task_notes" placeholder="Notes (optional)">
-                                        </div>
-                                        <div class="col-2 col-lg-2">
-                                            <select class="form-select" name="task_category" style="min-width: 120px;">
-                                                <option value="Work">Work</option>
-                                                <option value="Health">Health</option>
-                                                <option value="Personal">Personal</option>
-                                                <option value="Study">Study</option>
-                                                <option value="Chores">Chores</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-2 col-lg-2">
-                                            <select class="form-select" name="task_priority">
-                                                <option value="Low">Low</option>
-                                                <option value="Medium" selected>Medium</option>
-                                                <option value="High">High</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-12 col-md-1">
-                                            <button type="button" class="btn btn-danger btn-sm remove-task">&times;</button>
-                                        </div>
                                     </div>
+                                    <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-task-btn-tomorrow">
+                                        <i class="fas fa-plus"></i> Add Another Task
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="ai-suggest-btn-evening">
+                                        <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
+                                    </button>
                                 </div>
-                                <button type="button" class="btn btn-outline-success btn-sm mt-2" id="add-task-btn-tomorrow">
-                                    <i class="fas fa-plus"></i> Add Another Task
-                                </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="ai-suggest-btn-evening">
-                                    <i class="fas fa-magic me-1"></i>Suggest Tasks with AI
-                                </button>
-                            </div>
-                            
-                            <!-- Goal Accomplished -->
-                            <div class="mb-3">
-                                <label class="form-label">Did you accomplish your goal today?</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="goal_accomplished" 
-                                           id="goal_yes" value="yes"
-                                           {% if evening_checkin and evening_checkin.goal_accomplished %}checked{% endif %}>
-                                    <label class="form-check-label" for="goal_yes">
-                                        <i class="fas fa-check-circle text-success me-2"></i>Yes, I did it!
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="goal_accomplished" 
-                                           id="goal_no" value="no"
-                                           {% if evening_checkin and evening_checkin.goal_accomplished == False %}checked{% endif %}>
-                                    <label class="form-check-label" for="goal_no">
-                                        <i class="fas fa-times-circle text-danger me-2"></i>No, I didn't complete it
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Mood Rating -->
-                            <div class="mb-3">
-                                <label class="form-label">How would you rate your overall mood today?</label>
-                                <div class="d-flex justify-content-between">
-                                    {% for i in range(1, 6) %}
+                                
+                                <!-- Goal Accomplished -->
+                                <div class="mb-3">
+                                    <label class="form-label">Did you accomplish your goal today?</label>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="mood_rating" 
-                                               id="mood_rating_{{ i }}" value="{{ i }}"
-                                               {% if evening_checkin and evening_checkin.mood_rating == i %}checked{% endif %}>
-                                        <label class="form-check-label" for="mood_rating_{{ i }}">
-                                            {{ i }}<br><small class="text-muted">
-                                            {% if i == 1 %}Terrible{% elif i == 2 %}Bad{% elif i == 3 %}Okay{% elif i == 4 %}Good{% else %}Great{% endif %}
-                                            </small>
+                                        <input class="form-check-input" type="radio" name="goal_accomplished" 
+                                               id="goal_yes" value="yes"
+                                               {% if evening_checkin and evening_checkin.goal_accomplished %}checked{% endif %}>
+                                        <label class="form-check-label" for="goal_yes">
+                                            <i class="fas fa-check-circle text-success me-2"></i>Yes, I did it!
                                         </label>
                                     </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <!-- Exercise Done -->
-                            <div class="mb-3">
-                                <label class="form-label">Did you exercise today?</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="exercise_done" 
-                                           id="exercise_yes" value="yes"
-                                           {% if evening_checkin and evening_checkin.exercise_done %}checked{% endif %}>
-                                    <label class="form-check-label" for="exercise_yes">
-                                        <i class="fas fa-dumbbell text-success me-2"></i>Yes, I got some movement in
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="exercise_done" 
-                                           id="exercise_no" value="no"
-                                           {% if evening_checkin and evening_checkin.exercise_done == False %}checked{% endif %}>
-                                    <label class="form-check-label" for="exercise_no">
-                                        <i class="fas fa-couch text-warning me-2"></i>No, I didn't exercise today
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- What Drained You -->
-                            <div class="mb-3">
-                                <label for="what_drained_you" class="form-label">What drained you today?</label>
-                                <textarea class="form-control" id="what_drained_you" name="what_drained_you" rows="2"
-                                          placeholder="Optional: What took the most energy from you today?">{{ evening_checkin.what_drained_you if evening_checkin else '' }}</textarea>
-                            </div>
-
-                            <!-- Gratitude -->
-                            <div class="mb-3">
-                                <label for="gratitude" class="form-label">What are you grateful for today?</label>
-                                <textarea class="form-control" id="gratitude" name="gratitude" rows="2"
-                                          placeholder="e.g., A good conversation, beautiful weather, progress on a project...">{{ evening_checkin.gratitude if evening_checkin else '' }}</textarea>
-                            </div>
-
-                            <!-- Day Win -->
-                            <div class="mb-3">
-                                <label class="form-label">Would you call today a win?</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="day_win" 
-                                           id="day_win_yes" value="yes"
-                                           {% if evening_checkin and evening_checkin.day_win %}checked{% endif %}>
-                                    <label class="form-check-label" for="day_win_yes">
-                                        <i class="fas fa-trophy text-success me-2"></i>Yes, it was a good day!
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="day_win" 
-                                           id="day_win_no" value="no"
-                                           {% if evening_checkin and evening_checkin.day_win == False %}checked{% endif %}>
-                                    <label class="form-check-label" for="day_win_no">
-                                        <i class="fas fa-thumbs-down text-warning me-2"></i>No, it was challenging
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Overall Day Rating -->
-                            <div class="mb-3">
-                                <label class="form-label">Rate your overall day:</label>
-                                <div class="d-flex justify-content-center gap-3">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
-                                               id="rating_happy" value="😀"
-                                               {% if evening_checkin and evening_checkin.overall_day_rating == '😀' %}checked{% endif %}>
-                                        <label class="form-check-label" for="rating_happy" style="font-size: 2rem;">😀</label>
+                                        <input class="form-check-input" type="radio" name="goal_accomplished" 
+                                               id="goal_no" value="no"
+                                               {% if evening_checkin and evening_checkin.goal_accomplished == False %}checked{% endif %}>
+                                        <label class="form-check-label" for="goal_no">
+                                            <i class="fas fa-times-circle text-danger me-2"></i>No, I didn't complete it
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Mood Rating -->
+                                <div class="mb-3">
+                                    <label class="form-label">How would you rate your overall mood today?</label>
+                                    <div class="d-flex justify-content-between">
+                                        {% for i in range(1, 6) %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="mood_rating" 
+                                                   id="mood_rating_{{ i }}" value="{{ i }}"
+                                                   {% if evening_checkin and evening_checkin.mood_rating == i %}checked{% endif %}>
+                                            <label class="form-check-label" for="mood_rating_{{ i }}">
+                                                {{ i }}<br><small class="text-muted">
+                                                {% if i == 1 %}Terrible{% elif i == 2 %}Bad{% elif i == 3 %}Okay{% elif i == 4 %}Good{% else %}Great{% endif %}
+                                                </small>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Exercise Done -->
+                                <div class="mb-3">
+                                    <label class="form-label">Did you exercise today?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="exercise_done" 
+                                               id="exercise_yes" value="yes"
+                                               {% if evening_checkin and evening_checkin.exercise_done %}checked{% endif %}>
+                                        <label class="form-check-label" for="exercise_yes">
+                                            <i class="fas fa-dumbbell text-success me-2"></i>Yes, I got some movement in
+                                        </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
-                                               id="rating_neutral" value="😐"
-                                               {% if evening_checkin and evening_checkin.overall_day_rating == '😐' %}checked{% endif %}>
-                                        <label class="form-check-label" for="rating_neutral" style="font-size: 2rem;">😐</label>
+                                        <input class="form-check-input" type="radio" name="exercise_done" 
+                                               id="exercise_no" value="no"
+                                               {% if evening_checkin and evening_checkin.exercise_done == False %}checked{% endif %}>
+                                        <label class="form-check-label" for="exercise_no">
+                                            <i class="fas fa-couch text-warning me-2"></i>No, I didn't exercise today
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- What Drained You -->
+                                <div class="mb-3">
+                                    <label for="what_drained_you" class="form-label">What drained you today?</label>
+                                    <textarea class="form-control" id="what_drained_you" name="what_drained_you" rows="2"
+                                              placeholder="Optional: What took the most energy from you today?">{{ evening_checkin.what_drained_you if evening_checkin else '' }}</textarea>
+                                </div>
+
+                                <!-- Gratitude -->
+                                <div class="mb-3">
+                                    <label for="gratitude" class="form-label">What are you grateful for today?</label>
+                                    <textarea class="form-control" id="gratitude" name="gratitude" rows="2"
+                                              placeholder="e.g., A good conversation, beautiful weather, progress on a project...">{{ evening_checkin.gratitude if evening_checkin else '' }}</textarea>
+                                </div>
+
+                                <!-- Day Win -->
+                                <div class="mb-3">
+                                    <label class="form-label">Would you call today a win?</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="day_win" 
+                                               id="day_win_yes" value="yes"
+                                               {% if evening_checkin and evening_checkin.day_win %}checked{% endif %}>
+                                        <label class="form-check-label" for="day_win_yes">
+                                            <i class="fas fa-trophy text-success me-2"></i>Yes, it was a good day!
+                                        </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="overall_day_rating" 
-                                               id="rating_sad" value="😞"
-                                               {% if evening_checkin and evening_checkin.overall_day_rating == '😞' %}checked{% endif %}>
-                                        <label class="form-check-label" for="rating_sad" style="font-size: 2rem;">😞</label>
+                                        <input class="form-check-input" type="radio" name="day_win" 
+                                               id="day_win_no" value="no"
+                                               {% if evening_checkin and evening_checkin.day_win == False %}checked{% endif %}>
+                                        <label class="form-check-label" for="day_win_no">
+                                            <i class="fas fa-thumbs-down text-warning me-2"></i>No, it was challenging
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Overall Day Rating -->
+                                <div class="mb-3">
+                                    <label class="form-label">Rate your overall day:</label>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                                   id="rating_happy" value="😀"
+                                                   {% if evening_checkin and evening_checkin.overall_day_rating == '😀' %}checked{% endif %}>
+                                            <label class="form-check-label" for="rating_happy" style="font-size: 2rem;">😀</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                                   id="rating_neutral" value="😐"
+                                                   {% if evening_checkin and evening_checkin.overall_day_rating == '😐' %}checked{% endif %}>
+                                            <label class="form-check-label" for="rating_neutral" style="font-size: 2rem;">😐</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="overall_day_rating" 
+                                                   id="rating_sad" value="😞"
+                                                   {% if evening_checkin and evening_checkin.overall_day_rating == '😞' %}checked{% endif %}>
+                                            <label class="form-check-label" for="rating_sad" style="font-size: 2rem;">😞</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -452,6 +559,7 @@
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
 // Helper to call Gemini API from backend
 async function getGeminiSuggestions(habits, goal, previousTasks) {
@@ -680,21 +788,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (aiBtnEvening) aiBtnEvening.click();
         });
     }
-    // Tab-style toggle for check-in type
-    document.getElementById('tab-morning').addEventListener('click', function() {
-        document.getElementById('morning').checked = true;
-        document.getElementById('morningFields').style.display = 'block';
-        document.getElementById('eveningFields').style.display = 'none';
-        this.classList.add('active');
-        document.getElementById('tab-evening').classList.remove('active');
-    });
-    document.getElementById('tab-evening').addEventListener('click', function() {
-        document.getElementById('evening').checked = true;
-        document.getElementById('eveningFields').style.display = 'block';
-        document.getElementById('morningFields').style.display = 'none';
-        this.classList.add('active');
-        document.getElementById('tab-morning').classList.remove('active');
-    });
 });
 </script>
 {% endblock %} 

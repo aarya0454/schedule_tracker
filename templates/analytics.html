@@ -237,6 +237,7 @@
 </div>
 
 <!-- AI Analytics Summary Card -->
+{% if checkins|length >= 2 %}
 <div class="row mb-4">
   <div class="col-12">
     <div class="card bg-info text-white shadow mb-3">
@@ -247,7 +248,6 @@
     </div>
   </div>
 </div>
-
 <!-- Weekly/Monthly AI Report -->
 <div class="row mb-4">
   <div class="col-12">
@@ -261,7 +261,6 @@
     </div>
   </div>
 </div>
-
 <!-- Ask AI box -->
 <div class="row mb-4">
   <div class="col-12">
@@ -279,7 +278,6 @@
     </div>
   </div>
 </div>
-
 <!-- Motivational Quote (AI) -->
 <div class="row mb-4">
   <div class="col-12">
@@ -293,7 +291,6 @@
     </div>
   </div>
 </div>
-
 <!-- Best Reminder Time (AI) -->
 <div class="row mb-4">
   <div class="col-12">
@@ -307,7 +304,18 @@
     </div>
   </div>
 </div>
-
+{% else %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-info text-white shadow mb-3">
+      <div class="card-body text-center">
+        <i class="fas fa-robot fa-2x mb-2"></i>
+        <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% else %}
 <div class="text-center py-5">
     <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
@@ -404,7 +412,10 @@ const weeklyChart = new Chart(weeklyCtx, {
         }
     }
 });
-
+</script>
+{% endif %}
+{% if checkins|length >= 2 %}
+<script>
 function fetchAndDisplayAI(endpoint, elementId, key) {
   const el = document.getElementById(elementId);
   if (!el) return;
