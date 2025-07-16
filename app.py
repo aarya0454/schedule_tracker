@@ -434,23 +434,16 @@ def dashboard():
 
     # Prepare heatmap dates (4 weeks x 7 days)
     heatmap_dates = []
-    if checkins:
-        # Find the most recent Saturday (end of week)
-        last_date = checkins[0].date
-        last_saturday = last_date - timedelta(days=(last_date.weekday() + 2) % 7)
-        # Build 4 weeks, each Sunday to Saturday, oldest week first
-        for week in reversed(range(4)):
-            week_start = last_saturday - timedelta(days=6 + week * 7)
-            week_dates = [week_start + timedelta(days=d) for d in range(7)]
-            heatmap_dates.append(week_dates)
-    else:
-        # fallback: just show last 28 days from today, grouped by week, Sunday to Saturday
-        last_date = today
-        last_saturday = last_date - timedelta(days=(last_date.weekday() + 2) % 7)
-        for week in reversed(range(4)):
-            week_start = last_saturday - timedelta(days=6 + week * 7)
-            week_dates = [week_start + timedelta(days=d) for d in range(7)]
-            heatmap_dates.append(week_dates)
+    # Find the most recent Saturday (end of week)
+    last_date = today
+    # weekday(): Monday=0, Sunday=6; so days to next Saturday: (5 - weekday) % 7
+    days_since_sunday = last_date.weekday() + 1 if last_date.weekday() < 6 else 0
+    this_sunday = last_date - timedelta(days=days_since_sunday)
+    # Build 4 weeks, each Sunday to Saturday, oldest week first
+    for week in range(4):
+        week_start = this_sunday - timedelta(days=(3 - week) * 7)
+        week_dates = [week_start + timedelta(days=d) for d in range(7)]
+        heatmap_dates.append(week_dates)
 
     # Prepare energy/focus pairs for charting or display
     energy_levels = [
