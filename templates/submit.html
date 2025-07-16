@@ -682,12 +682,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Force Bootstrap to re-initialize the tab component for #checkinTab
+  // Ensure the correct tab is active on page load
+  var activeTab = document.querySelector('.nav-link.active');
+  if (activeTab) {
+    var tab = new bootstrap.Tab(activeTab);
+    tab.show();
+  }
+  // Always allow toggling
   var triggerTabList = [].slice.call(document.querySelectorAll('#checkinTab button[data-bs-toggle="tab"]'));
   triggerTabList.forEach(function(triggerEl) {
-    var tabTrigger = new bootstrap.Tab(triggerEl);
     triggerEl.addEventListener('click', function (event) {
       event.preventDefault();
+      var tabTrigger = new bootstrap.Tab(triggerEl);
       tabTrigger.show();
     });
   });

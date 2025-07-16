@@ -1413,113 +1413,95 @@ def call_gemini(prompt, api_key):
         return f"AI error: {e}"
 
 
-@app.route('/ai/personalized_tip', methods=['GET'])
-@login_required
-def ai_personalized_tip():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    prompt = f"Based on this user's check-in history: {checkins}, give one actionable, personalized tip for today."
-    tip = call_gemini(prompt, api_key)
-    return jsonify({'tip': tip})
+def serialize_checkins(checkins):
+    # Convert check-ins to a list of dicts with key info for AI
+    return [
+        {
+            'date': c.date.strftime('%Y-%m-%d'),
+            'time_of_day': c.time_of_day,
+            'sleep_hours': c.sleep_hours,
+            'sleep_quality': c.sleep_quality,
+            'energy_level': c.energy_level,
+            'morning_goal': c.morning_goal,
+            'anxiety_level': c.anxiety_level,
+            'goal_accomplished': c.goal_accomplished,
+            'mood_rating': c.mood_rating,
+            'exercise_done': c.exercise_done,
+            'what_drained_you': c.what_drained_you,
+            'gratitude': c.gratitude,
+            'day_win': c.day_win,
+            'overall_day_rating': c.overall_day_rating,
+            'mood': c.mood,
+            'focus_level': c.focus_level,
+            'tasks_done': c.tasks_done,
+            'diet': c.diet,
+            'exercise': c.exercise,
+            'habits': c.habits
+        }
+        for c in checkins
+    ]
 
-
-@app.route('/ai/habit_suggestion', methods=['GET'])
-@login_required
-def ai_habit_suggestion():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    prompt = f"Based on this user's check-in and habit history: {checkins}, suggest 2-3 new habits to try."
-    habits = call_gemini(prompt, api_key)
-    return jsonify({'habits': habits})
-
-
-@app.route('/ai/goal_suggestion', methods=['GET'])
-@login_required
-def ai_goal_suggestion():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    tasks = get_all_tasks()
-    prompt = f"Based on this user's check-ins and unfinished tasks: {checkins}, {tasks}, suggest a realistic, motivating goal for today."
-    goal = call_gemini(prompt, api_key)
-    return jsonify({'goal': goal})
-
-
-@app.route('/ai/analytics_summary', methods=['GET'])
-@login_required
-def ai_analytics_summary():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    tasks = get_all_tasks()
-    prompt = f"Analyze this user's check-ins and tasks: {checkins}, {tasks}. Summarize any patterns in mood, energy, sleep, and task completion."
-    summary = call_gemini(prompt, api_key)
-    return jsonify({'summary': summary})
-
-
-@app.route('/ai/reflection_prompt', methods=['GET'])
-@login_required
-def ai_reflection_prompt():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    if not checkins:
-        return jsonify({'prompt': ''})
-    last = checkins[-1]
-    if hasattr(last,
-               'mood_rating') and last.mood_rating and last.mood_rating <= 2:
-        prompt = f"The user rated their day as challenging. Suggest a gentle reflection prompt or encouragement."
-        reflection = call_gemini(prompt, api_key)
-        return jsonify({'prompt': reflection})
-    return jsonify({'prompt': ''})
-
-
-@app.route('/ai/weekly_report', methods=['GET'])
-@login_required
-def ai_weekly_report():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    tasks = get_all_tasks()
-    prompt = f"Summarize this user's progress over all available check-ins and tasks, highlight their biggest wins, and suggest one area to focus on next."
-    report = call_gemini(prompt, api_key)
-    return jsonify({'report': report})
-
-
-@app.route('/ai/analytics_query', methods=['POST'])
-@login_required
-def ai_analytics_query():
-    api_key = app.config.get('GENAI_API_KEY')
-    checkins = get_all_checkins()
-    tasks = get_all_tasks()
-    user_query = request.json.get('query', '')
-    prompt = f"User asked: '{user_query}'. Here is their check-in and task history: {checkins}, {tasks}. Answer the question concisely."
-    answer = call_gemini(prompt, api_key)
-    return jsonify({'answer': answer})
-
+def serialize_tasks(tasks):
+    return [
+        {
+            'date': t.date.strftime('%Y-%m-%d'),
+            'time_of_day': t.time_of_day,
+            'task_name': t.task_name,
+            'task_notes': t.task_notes,
+            'is_completed': t.is_completed,
+            'is_carried_over': t.is_carried_over,
+            'category': t.category,
+            'priority': t.priority
+        }
+        for t in tasks
+    ]
 
 @app.route('/ai/motivation', methods=['GET'])
 @login_required
 def ai_motivation():
     api_key = app.config.get('GENAI_API_KEY')
     checkins = get_all_checkins()
-    prompt = f"Based on this user's recent check-ins, generate a motivational quote or affirmation tailored to their current mood and goals."
+    if len(checkins) >= 2:
+        tasks = get_all_tasks()
+        prompt = f"Based on this user's recent check-ins: {serialize_checkins(checkins)}, and tasks: {serialize_tasks(tasks)}, generate a motivational quote or affirmation tailored to their current mood and goals."
+    else:
+        prompt = "Generate a generic motivational quote or affirmation for someone tracking their daily habits and goals."
     quote = call_gemini(prompt, api_key)
     return jsonify({'quote': quote})
 
+@app.route('/ai/personalized_tip', methods=['GET'])
+@login_required
+def ai_personalized_tip():
+    api_key = app.config.get('GENAI_API_KEY')
+    checkins = get_all_checkins()
+    if len(checkins) >= 2:
+        prompt = f"Based on this user's check-in history: {serialize_checkins(checkins)}, give one actionable, personalized tip for today."
+    else:
+        prompt = "Give a generic actionable tip for someone trying to improve their daily habits."
+    tip = call_gemini(prompt, api_key)
+    return jsonify({'tip': tip})
 
 @app.route('/ai/task_advice', methods=['GET'])
 @login_required
 def ai_task_advice():
     api_key = app.config.get('GENAI_API_KEY')
     tasks = get_all_tasks()
-    prompt = f"Here are the user's current tasks: {tasks}. Suggest which tasks to prioritize and how to break down big goals into smaller steps."
+    if len(tasks) >= 2:
+        prompt = f"Here are the user's current tasks: {serialize_tasks(tasks)}. Suggest which tasks to prioritize and how to break down big goals into smaller steps."
+    else:
+        prompt = "Give generic advice on how to prioritize tasks and break down big goals into smaller steps."
     advice = call_gemini(prompt, api_key)
     return jsonify({'advice': advice})
-
 
 @app.route('/ai/reminder_time', methods=['GET'])
 @login_required
 def ai_reminder_time():
     api_key = app.config.get('GENAI_API_KEY')
     checkins = get_all_checkins()
-    prompt = f"Based on this user's check-in and habit patterns, suggest the best time of day for reminders."
+    if len(checkins) >= 2:
+        prompt = f"Based on this user's check-in and habit patterns: {serialize_checkins(checkins)}, suggest the best time of day for reminders."
+    else:
+        prompt = "Suggest the best time of day for reminders for someone building new habits."
     reminder = call_gemini(prompt, api_key)
     return jsonify({'reminder_time': reminder})
 
