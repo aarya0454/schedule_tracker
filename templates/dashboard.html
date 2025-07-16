@@ -588,7 +588,44 @@
 </div>
 {% endif %}
 
-<!-- Calendar Heatmap -->
+<!-- AI Cards (restored) -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-3">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-quote-left me-2"></i>Motivational Quote (AI)</h5>
+      </div>
+      <div class="card-body text-center">
+        <div id="ai-motivational-quote"><span class="spinner-border spinner-border-sm"></span> Loading motivational quote...</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-3">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task Prioritization Advice (AI)</h5>
+      </div>
+      <div class="card-body text-center">
+        <div id="ai-task-advice"><span class="spinner-border spinner-border-sm"></span> Loading advice...</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow mb-3">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Best Reminder Time (AI)</h5>
+      </div>
+      <div class="card-body text-center">
+        <div id="ai-reminder-time"><span class="spinner-border spinner-border-sm"></span> Loading reminder time...</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Fix Day Win Heatmap order: reverse heatmap_dates so oldest week is at top -->
 {% if heatmap_dates %}
 <div class="row mb-4">
     <div class="col-12">
@@ -605,7 +642,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for week_dates in heatmap_dates %}
+                            {% for week_dates in heatmap_dates|reverse %}
                             <tr>
                                 {% for checkin_date in week_dates %}
                                 {% set evening_checkin_item = evening_checkins|selectattr('date', 'equalto', checkin_date)|first %}
