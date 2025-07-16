@@ -834,7 +834,6 @@
 
 {% block scripts %}
 {{ super() }}
-{% if checkins|length >= 2 %}
 <script>
 // Helper to fetch and display AI results
 function fetchAndDisplayAI(endpoint, elementId, key) {
@@ -844,13 +843,15 @@ function fetchAndDisplayAI(endpoint, elementId, key) {
     fetch(endpoint)
         .then(r => r.json())
         .then(data => {
-            el.textContent = data[key] || 'No data.';
+            // If the response is an array, join it; otherwise, show the value or fallback
+            let value = data[key];
+            if (Array.isArray(value)) value = value.join('\n');
+            el.textContent = value || 'No data.';
         })
         .catch(() => {
             el.textContent = 'AI unavailable.';
         });
 }
-// Fetch all AI cards on page load
 window.addEventListener('DOMContentLoaded', function() {
     fetchAndDisplayAI('/ai/personalized_tip', 'ai-personalized-tip', 'tip');
     fetchAndDisplayAI('/ai/habit_suggestion', 'ai-habit-suggestion', 'habits');
@@ -886,7 +887,7 @@ if (aiQueryForm) {
     });
 }
 </script>
-{% endif %}
+{% endblock %}
 <style>
 .energy-heatmap {
     display: inline-block;
