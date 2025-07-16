@@ -601,13 +601,7 @@
                     <table class="table table-sm table-dark">
                         <thead>
                             <tr>
-                                <th>Sun</th>
-                                <th>Mon</th>
-                                <th>Tue</th>
-                                <th>Wed</th>
-                                <th>Thu</th>
-                                <th>Fri</th>
-                                <th>Sat</th>
+                                <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -627,9 +621,9 @@
                                         </div>
                                     {% endif %}
                                 </td>
-                                {% endfor %} {# closes for checkin_date in week_dates #}
+                                {% endfor %}
                             </tr>
-                            {% endfor %} {# closes for week_dates in heatmap_dates #}
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -647,190 +641,37 @@
 </div>
 {% endif %}
 
-<!-- AI Tips -->
-{% if ai_tips %}
+<!-- Mood Trend & Exercise Frequency Charts -->
 <div class="row mb-4">
-    <div class="col-12">
-        {% for tip in ai_tips %}
-        <div class="alert alert-info d-flex align-items-center mb-2">
-            <i class="fas fa-robot me-2"></i>
-            <div>
-                <strong>AI Tip for {{ tip.type|capitalize }}:</strong> {{ tip.message }}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
-
-<!-- Add in Habit Analysis section -->
-{% if habit_data %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-magic me-2"></i>Smart Habit Suggestions (AI)</h5>
+                <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Mood Trend</h5>
             </div>
-            <div class="card-body text-center">
-                <div id="ai-habit-suggestion">Loading habit suggestions...</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Smart Goal for Today (AI) -->
-{% if checkins|length >= 2 %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Smart Goal for Today (AI)</h5>
-            </div>
-            <div class="card-body text-center">
-                <div id="ai-goal-suggestion">Loading smart goal...</div>
+            <div class="card-body">
+                {% if mood_labels and mood_values %}
+                <canvas id="moodChart" width="400" height="200"></canvas>
+                {% else %}
+                <div class="text-muted text-center">No mood data available.</div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
-{% else %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Smart Goal for Today (AI)</h5>
-            </div>
-            <div class="card-body text-center">
-                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Weekly/Monthly AI Report -->
-{% if checkins|length >= 2 %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Weekly/Monthly AI Report</h5>
-            </div>
-            <div class="card-body text-center">
-                <div id="ai-weekly-report">Loading report...</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% else %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Weekly/Monthly AI Report</h5>
-            </div>
-            <div class="card-body text-center">
-                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Mood/Energy Pattern (AI) -->
-{% if checkins|length >= 2 %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mood/Energy Pattern (AI)</h5>
-            </div>
-            <div class="card-body text-center">
-                <div id="ai-analytics-summary">Loading pattern analysis...</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% else %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mood/Energy Pattern (AI)</h5>
-            </div>
-            <div class="card-body text-center">
-                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<!-- Add Reflection Prompt in Evening Insights -->
-{% if evening_insights %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-comment-dots me-2"></i>Reflection Prompt (AI)</h5>
+                <h5 class="mb-0"><i class="fas fa-dumbbell me-2"></i>Exercise Frequency</h5>
             </div>
-            <div class="card-body text-center">
-                <div id="ai-reflection-prompt">Loading reflection prompt...</div>
+            <div class="card-body">
+                {% if exercise_labels and exercise_values %}
+                <canvas id="exerciseChart" width="400" height="200"></canvas>
+                {% else %}
+                <div class="text-muted text-center">No exercise data available.</div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-{% endif %}
-
-<!-- Ask AI About Your Data -->
-<div class="card shadow mb-3">
-  <div class="card-header bg-info text-white">
-    <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Ask AI About Your Data</h5>
-  </div>
-  <div class="card-body">
-    {% if checkins|length < 2 %}
-      <div class="alert alert-warning text-center mb-0">Please check in for at least 2 days to ask AI about your data.</div>
-    {% else %}
-      <form id="ask-ai-form" class="d-flex mb-3" onsubmit="return false;">
-        <input type="text" class="form-control me-2" id="ai-question" placeholder="Ask anything about your mood, sleep, tasks, etc...">
-        <button type="submit" class="btn btn-primary" id="ask-ai-btn">Ask AI</button>
-      </form>
-      <div id="ai-response" class="bg-dark text-info rounded p-3" style="min-height: 48px;"></div>
-    {% endif %}
-  </div>
-</div>
-
-<!-- Motivational Quote (AI) -->
-<div class="card shadow mb-3">
-  <div class="card-header bg-info text-white">
-    <h5 class="mb-0"><i class="fas fa-quote-left me-2"></i>Motivational Quote (AI)</h5>
-  </div>
-  <div class="card-body text-center">
-    <div id="ai-motivational-quote"><span class="spinner-border spinner-border-sm"></span> Loading motivational quote...</div>
-  </div>
-</div>
-
-<!-- Task Prioritization Advice (AI) -->
-<div class="card shadow mb-3">
-  <div class="card-header bg-info text-white">
-    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task Prioritization Advice (AI)</h5>
-  </div>
-  <div class="card-body text-center">
-    <div id="ai-task-advice"><span class="spinner-border spinner-border-sm"></span> Loading advice...</div>
-  </div>
-</div>
-
-<!-- Best Reminder Time (AI) -->
-<div class="card shadow mb-3">
-  <div class="card-header bg-info text-white">
-    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Best Reminder Time (AI)</h5>
-  </div>
-  <div class="card-body text-center">
-    <div id="ai-reminder-time"><span class="spinner-border spinner-border-sm"></span> Loading reminder time...</div>
-  </div>
-</div>
-
-{% endblock %}
 
 {% block scripts %}
 {{ super() }}

@@ -460,6 +460,30 @@ def dashboard():
     ]
     energy_focus_pairs = list(zip(energy_levels, focus_levels))
 
+    # Mood Trend Data (last 14 days)
+    mood_labels = []
+    mood_values = []
+    for i in range(13, -1, -1):
+        d = today - timedelta(days=i)
+        c = CheckIn.query.filter_by(user_id=current_user.id, date=d, time_of_day='evening').first()
+        mood_labels.append(d.strftime('%a %d'))
+        if c and c.mood_rating is not None:
+            mood_values.append(c.mood_rating)
+        else:
+            mood_values.append(None)
+
+    # Exercise Frequency Data (last 14 days)
+    exercise_labels = []
+    exercise_values = []
+    for i in range(13, -1, -1):
+        d = today - timedelta(days=i)
+        c = CheckIn.query.filter_by(user_id=current_user.id, date=d, time_of_day='evening').first()
+        exercise_labels.append(d.strftime('%a %d'))
+        if c and c.exercise_done is not None:
+            exercise_values.append(1 if c.exercise_done else 0)
+        else:
+            exercise_values.append(None)
+
     # Task stats for today
     yesterday = today - timedelta(days=1)
     tasks_today = Task.query.filter_by(user_id=current_user.id,
@@ -659,6 +683,10 @@ def dashboard():
                            heatmap_dates=heatmap_dates,
                            motivational_quote=motivational_quote,
                            energy_focus_pairs=energy_focus_pairs,
+                           mood_labels=mood_labels,
+                           mood_values=mood_values,
+                           exercise_labels=exercise_labels,
+                           exercise_values=exercise_values,
                            total_tasks=total_tasks,
                            completed_tasks=completed_tasks,
                            pending_tasks=pending_tasks,
