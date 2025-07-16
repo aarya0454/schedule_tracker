@@ -1558,6 +1558,34 @@ def ai_ask():
     response = call_gemini(prompt, api_key)
     return jsonify({'response': response})
 
+@app.route('/ai/task_advice', methods=['GET'])
+@login_required
+def ai_task_advice():
+    api_key = app.config.get('GENAI_API_KEY')
+    tasks = get_all_tasks()
+    if len(tasks) >= 2:
+        prompt = f"Here are the user's current tasks: {serialize_tasks(tasks)}. Suggest which tasks to prioritize and how to break down big goals into smaller steps."
+    else:
+        prompt = "Give generic advice on how to prioritize tasks and break down big goals into smaller steps."
+    advice = call_gemini(prompt, api_key)
+    if not advice or not str(advice).strip():
+        advice = "Focus on your most important tasks first, break big goals into small steps, and celebrate progress!"
+    return jsonify({'advice': advice})
+
+@app.route('/ai/reminder_time', methods=['GET'])
+@login_required
+def ai_reminder_time():
+    api_key = app.config.get('GENAI_API_KEY')
+    checkins = get_all_checkins()
+    if len(checkins) >= 2:
+        prompt = f"Based on this user's check-in and habit patterns: {serialize_checkins(checkins)}, suggest the best time of day for reminders."
+    else:
+        prompt = "Suggest the best time of day for reminders for someone building new habits."
+    reminder = call_gemini(prompt, api_key)
+    if not reminder or not str(reminder).strip():
+        reminder = "Try setting reminders for your most productive time of day—often mid-morning or early evening works best!"
+    return jsonify({'reminder_time': reminder})
+
 
 if __name__ == '__main__':
     with app.app_context():
