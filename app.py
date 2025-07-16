@@ -434,7 +434,7 @@ def dashboard():
 
     # Prepare heatmap dates (4 weeks x 7 days)
     heatmap_dates = []
-    # Find the most recent Saturday (end of week)
+    # Find the most recent Sunday (end of week)
     last_date = today
     # weekday(): Monday=0, Sunday=6; so days to next Saturday: (5 - weekday) % 7
     days_since_sunday = last_date.weekday() + 1 if last_date.weekday() < 6 else 0
