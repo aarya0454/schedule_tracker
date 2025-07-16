@@ -679,7 +679,8 @@
 </div>
 {% endif %}
 
-<!-- Add in Today's Status section -->
+<!-- Smart Goal for Today (AI) -->
+{% if checkins|length >= 2 %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow mb-3">
@@ -692,8 +693,23 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Smart Goal for Today (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
-<!-- Add Weekly/Monthly AI Report -->
+<!-- Weekly/Monthly AI Report -->
+{% if checkins|length >= 2 %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow mb-3">
@@ -706,8 +722,23 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Weekly/Monthly AI Report</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
-<!-- Add Mood/Energy Pattern (AI) -->
+<!-- Mood/Energy Pattern (AI) -->
+{% if checkins|length >= 2 %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow mb-3">
@@ -720,6 +751,20 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mood/Energy Pattern (AI)</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="lead">Create your check-in for more than 2 days to get insights from AI.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Add Reflection Prompt in Evening Insights -->
 {% if evening_insights %}
@@ -737,64 +782,52 @@
 </div>
 {% endif %}
 
-<!-- Add Ask AI box -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Ask AI About Your Data</h5>
-            </div>
-            <div class="card-body">
-                <form id="ai-analytics-query-form" class="d-flex flex-column flex-md-row align-items-center">
-                    <input type="text" id="ai-analytics-query" class="form-control me-2 mb-2 mb-md-0" placeholder="Ask anything about your mood, sleep, tasks, etc...">
-                    <button type="submit" class="btn btn-primary">Ask AI</button>
-                </form>
-                <div id="ai-analytics-query-result" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
+<!-- Ask AI About Your Data -->
+<div class="card shadow mb-3">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Ask AI About Your Data</h5>
+  </div>
+  <div class="card-body">
+    {% if checkins|length < 2 %}
+      <div class="alert alert-warning text-center mb-0">Please check in for at least 2 days to ask AI about your data.</div>
+    {% else %}
+      <form id="ask-ai-form" class="d-flex mb-3" onsubmit="return false;">
+        <input type="text" class="form-control me-2" id="ai-question" placeholder="Ask anything about your mood, sleep, tasks, etc...">
+        <button type="submit" class="btn btn-primary" id="ask-ai-btn">Ask AI</button>
+      </form>
+      <div id="ai-response" class="bg-dark text-info rounded p-3" style="min-height: 48px;"></div>
+    {% endif %}
+  </div>
 </div>
 
-<!-- Add Motivational Quote (AI) -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card bg-gradient-primary text-white shadow mb-3">
-            <div class="card-body text-center">
-                <i class="fas fa-quote-left fa-2x mb-3 opacity-50"></i>
-                <blockquote class="mb-2">
-                    <p class="lead mb-2" id="ai-motivation">Loading motivational quote...</p>
-                </blockquote>
-            </div>
-        </div>
-    </div>
+<!-- Motivational Quote (AI) -->
+<div class="card shadow mb-3">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0"><i class="fas fa-quote-left me-2"></i>Motivational Quote (AI)</h5>
+  </div>
+  <div class="card-body text-center">
+    <div id="ai-motivational-quote"><span class="spinner-border spinner-border-sm"></span> Loading motivational quote...</div>
+  </div>
 </div>
 
-<!-- Add Task Prioritization Advice -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task Prioritization Advice (AI)</h5>
-            </div>
-            <div class="card-body text-center">
-                <div id="ai-task-advice">Loading advice...</div>
-            </div>
-        </div>
-    </div>
+<!-- Task Prioritization Advice (AI) -->
+<div class="card shadow mb-3">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task Prioritization Advice (AI)</h5>
+  </div>
+  <div class="card-body text-center">
+    <div id="ai-task-advice"><span class="spinner-border spinner-border-sm"></span> Loading advice...</div>
+  </div>
 </div>
 
-<!-- Add Best Reminder Time (AI) -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow mb-3">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Best Reminder Time (AI)</h5>
-            </div>
-            <div class="card-body text-center">
-                <div id="ai-reminder-time">Loading reminder time...</div>
-            </div>
-        </div>
-    </div>
+<!-- Best Reminder Time (AI) -->
+<div class="card shadow mb-3">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Best Reminder Time (AI)</h5>
+  </div>
+  <div class="card-body text-center">
+    <div id="ai-reminder-time"><span class="spinner-border spinner-border-sm"></span> Loading reminder time...</div>
+  </div>
 </div>
 
 {% endblock %}
@@ -824,7 +857,7 @@ window.addEventListener('DOMContentLoaded', function() {
     fetchAndDisplayAI('/ai/goal_suggestion', 'ai-goal-suggestion', 'goal');
     fetchAndDisplayAI('/ai/weekly_report', 'ai-weekly-report', 'report');
     fetchAndDisplayAI('/ai/analytics_summary', 'ai-analytics-summary', 'summary');
-    fetchAndDisplayAI('/ai/motivation', 'ai-motivation', 'quote');
+    fetchAndDisplayAI('/ai/motivation', 'ai-motivational-quote', 'quote');
     fetchAndDisplayAI('/ai/task_advice', 'ai-task-advice', 'advice');
     fetchAndDisplayAI('/ai/reminder_time', 'ai-reminder-time', 'reminder_time');
     fetchAndDisplayAI('/ai/reflection_prompt', 'ai-reflection-prompt', 'prompt');

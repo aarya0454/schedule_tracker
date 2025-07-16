@@ -30,7 +30,7 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="tab-content">
+                        <div class="tab-content mt-4">
                             <div class="tab-pane fade {% if suggested_time == 'morning' or request.args.get('time') == 'morning' %}show active{% endif %}" id="morningFields" role="tabpanel" aria-labelledby="tab-morning">
                                 <h4 class="mb-3 text-primary border-bottom pb-2"><i class="fas fa-sun me-2"></i>Morning Check-in</h4>
                                 
@@ -679,6 +679,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (aiBtnEvening) aiBtnEvening.click();
         });
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Force Bootstrap to re-initialize the tab component for #checkinTab
+  var triggerTabList = [].slice.call(document.querySelectorAll('#checkinTab button[data-bs-toggle="tab"]'));
+  triggerTabList.forEach(function(triggerEl) {
+    var tabTrigger = new bootstrap.Tab(triggerEl);
+    triggerEl.addEventListener('click', function (event) {
+      event.preventDefault();
+      tabTrigger.show();
+    });
+  });
 });
 </script>
 {% endblock %} 

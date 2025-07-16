@@ -1524,6 +1524,19 @@ def ai_reminder_time():
     return jsonify({'reminder_time': reminder})
 
 
+@app.route('/ai/ask', methods=['POST'])
+@login_required
+def ai_ask():
+    api_key = app.config.get('GENAI_API_KEY')
+    data = request.json or {}
+    question = data.get('question', '')
+    checkins = get_all_checkins()
+    tasks = get_all_tasks() if 'get_all_tasks' in globals() else []
+    prompt = f"User asked: '{question}'. Here is their check-in and task history: {checkins}, {tasks}. Answer the question concisely."
+    response = call_gemini(prompt, api_key)
+    return jsonify({'response': response})
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
